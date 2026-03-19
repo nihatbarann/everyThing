@@ -2,35 +2,55 @@
 
 class AuthController {
     
-    // JWT_SECRET must be set as an Apache/PHP environment variable (e.g. in .htaccess or server config).
-    // Never hard-code a real secret here — it would be exposed in version control.
     private $secretKey;
 
     public function __construct() {
-        // Read the secret from the server environment.
-        // Set this via Apache: SetEnv JWT_SECRET "your-long-random-string"
-        $this->secretKey = getenv('JWT_SECRET') ?: 'change-this-in-production-' . gethostname();
+        $this->secretKey = getenv('JWT_SECRET') ?: 'EveryThing_Super_Secret_Key_Change_In_Prod';
     }
 
     public function login() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['username']) || !isset($data['password'])) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Username and password required']);
-            return;
-        }
-
         try {
+            $raw = file_get_contents('php://input');
+            file_put_contents('C:/tmp/login_debug.log', date('[Y-m-d H:i:s] ') . "Login attempt: " . $raw . "\n", FILE_APPEND);
+            $data = json_decode($raw, true);
+
+            if (!isset($data['username']) || !isset($data['password'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Username and password required']);
+                return;
+            }
             $pdo = Database::getConnection();
-            $stmt = $pdo->prepare("SELECT u.id, u.username, u.password, u.role_id, r.name as role_name 
-                                 FROM users u 
-                                 JOIN roles r ON u.role_id = r.id 
-                                 WHERE u.username = ?");
+            $stmt = $pdo->prepare(
+                "SELECT u.id, u.username, u.password, u.role_id, u.is_active, r.name as role_name 
+                 FROM users u 
+                 JOIN roles r ON u.role_id = r.id 
+                 WHERE u.username = ? AND u.deleted_at IS NULL"
+            );
             $stmt->execute([$data['username']]);
             $user = $stmt->fetch();
 
-            if ($user && password_verify($data['password'], $user['password'])) {
+            if (!$user) {
+                http_response_code(401);
+                echo json_encode(['error' => 'Invalid credentials']);
+                return;
+            }
+
+            if (!$user['is_active']) {
+                http_response_code(403);
+                echo json_encode(['error' => 'Account is deactivated. Contact your administrator.']);
+                return;
+            }
+
+            if (password_verify($data['password'], $user['password'])) {
+                // Update last_login
+                $updateStmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+                $updateStmt->execute([$user['id']]);
+
+                // Get user permissions
+                require_once __DIR__ . '/../Core/AuthMiddleware.php';
+                $auth = new AuthMiddleware();
+                $permissions = $auth->getUserPermissions($user['id']);
+
                 // Generate JWT
                 $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
                 $payload = json_encode([
@@ -38,7 +58,7 @@ class AuthController {
                     'username' => $user['username'],
                     'role_id' => $user['role_id'],
                     'role_name' => $user['role_name'],
-                    'exp' => time() + (60 * 60 * 24) // 24 hours
+                    'exp' => time() + (60 * 60 * 24)
                 ]);
 
                 $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
@@ -53,7 +73,8 @@ class AuthController {
                     'user' => [
                         'id' => $user['id'],
                         'username' => $user['username'],
-                        'role' => $user['role_name']
+                        'role' => $user['role_name'],
+                        'permissions' => $permissions
                     ]
                 ]);
             } else {
@@ -63,6 +84,45 @@ class AuthController {
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Server error: ' . $e->getMessage()]);
+        }
+    }
+
+    public function me() {
+        require_once __DIR__ . '/../Core/AuthMiddleware.php';
+        $auth = new AuthMiddleware();
+        $userData = $auth->verifyToken();
+
+        try {
+            $pdo = Database::getConnection();
+            $stmt = $pdo->prepare(
+                "SELECT u.*, r.name as role_name,
+                 IFNULL(NULLIF(TRIM(CONCAT_WS(' ', m.first_name, m.last_name)), ''), m.username) as manager_name,
+                 m.username as manager_username,
+                 IFNULL(NULLIF(TRIM(CONCAT_WS(' ', c.first_name, c.last_name)), ''), c.username) as created_by_name,
+                 c.username as created_by_username
+                 FROM users u
+                 JOIN roles r ON u.role_id = r.id
+                 LEFT JOIN users m ON u.manager_id = m.id
+                 LEFT JOIN users c ON u.created_by = c.id
+                 WHERE u.id = ? AND u.deleted_at IS NULL"
+            );
+            $stmt->execute([$userData['user_id']]);
+            $profile = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$profile) {
+                http_response_code(404);
+                echo json_encode(['error' => 'User not found']);
+                return;
+            }
+
+            unset($profile['password']);
+            $profile['role'] = $profile['role_name']; // Alias for legacy support
+            $profile['permissions'] = $auth->getUserPermissions($userData['user_id']);
+
+            echo json_encode(['user' => $profile]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Server error']);
         }
     }
 }

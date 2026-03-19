@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { LayoutDashboard, Users, Settings, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogOut, Shield, CheckSquare, FileText, Globe, Megaphone, Bell } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const [menus, setMenus] = useState([]);
@@ -36,10 +36,15 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const getIcon = (iconName) => {
     switch (iconName) {
-      case 'home':     return <LayoutDashboard />;
-      case 'users':    return <Users />;
-      case 'settings': return <Settings />;
-      default:         return <LayoutDashboard />;
+      case 'home':         return <LayoutDashboard />;
+      case 'users':        return <Users />;
+      case 'settings':     return <Settings />;
+      case 'CheckSquare':  return <CheckSquare />;
+      case 'file-text':    return <FileText />;
+      case 'globe':        return <Globe />;
+      case 'megaphone':    return <Megaphone />;
+      case 'bell':         return <Bell />;
+      default:             return <LayoutDashboard />;
     }
   };
 
@@ -90,7 +95,14 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* Footer */}
         <div className="sidebar-footer">
           {user && (
-            <div className="sidebar-user-card">
+            <div 
+              className="sidebar-user-card cursor-pointer hover:bg-white/5 transition-colors" 
+              onClick={() => {
+                navigate('/dashboard/profile');
+                handleNavClick(); // close sidebar on mobile
+              }}
+              title="Profilimi Görüntüle"
+            >
               <div className="sidebar-user-avatar">
                 {user.username.charAt(0).toUpperCase()}
               </div>

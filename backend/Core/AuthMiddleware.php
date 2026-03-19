@@ -1,18 +1,35 @@
 <?php
 
 class AuthMiddleware {
-    private $secretKey = "EveryThing_Super_Secret_Key_Change_In_Prod";
+    private $secretKey;
 
+    public function __construct() {
+        $this->secretKey = getenv('JWT_SECRET') ?: 'EveryThing_Super_Secret_Key_Change_In_Prod';
+    }
+
+    /**
+     * Verify JWT token and return user payload.
+     * Exits with 401 if invalid.
+     */
     public function verifyToken() {
-        $headers = getallheaders();
-        $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
+        $authHeader = '';
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+        } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        } elseif (function_exists('getallheaders')) {
+            $headers = getallheaders();
+            if (isset($headers['Authorization'])) {
+                $authHeader = $headers['Authorization'];
+            }
+        }
         
         if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
             $jwt = $matches[1];
             $tokenParts = explode('.', $jwt);
             
             if(count($tokenParts) != 3) {
-                return false;
+                $this->unauthorized();
             }
 
             $header = base64_decode(str_replace(['-', '_'], ['+', '/'], $tokenParts[0]));
@@ -27,11 +44,100 @@ class AuthMiddleware {
             if (hash_equals($base64UrlSignature, $signatureProvided)) {
                 $payloadData = json_decode($payload, true);
                 if($payloadData['exp'] > time()) {
-                    return $payloadData; // Valid user payload
+                    return $payloadData;
                 }
             }
         }
         
+        $this->unauthorized();
+    }
+
+    /**
+     * Check if the authenticated user has a specific permission.
+     * Returns true/false without exiting.
+     */
+    public function hasPermission($userId, $permissionKey) {
+        try {
+            $pdo = Database::getConnection();
+            $stmt = $pdo->prepare(
+                "SELECT COUNT(*) FROM role_permissions rp
+                 JOIN permissions p ON rp.permission_id = p.id
+                 JOIN users u ON u.role_id = rp.role_id
+                 WHERE u.id = ? AND p.`key` = ? AND u.deleted_at IS NULL"
+            );
+            $stmt->execute([$userId, $permissionKey]);
+            return $stmt->fetchColumn() > 0;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Require a specific permission. Exits with 403 if not authorized.
+     */
+    public function requirePermission($userId, $permissionKey) {
+        if (!$this->hasPermission($userId, $permissionKey)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden: missing permission ' . $permissionKey]);
+            exit();
+        }
+    }
+
+    /**
+     * Check if user is admin (role_name = 'Admin').
+     */
+    public function isAdmin($userData) {
+        return isset($userData['role_name']) && $userData['role_name'] === 'Admin';
+    }
+
+    /**
+     * Get all permission keys for a user.
+     */
+    public function getUserPermissions($userId) {
+        try {
+            $pdo = Database::getConnection();
+            $stmt = $pdo->prepare(
+                "SELECT p.`key` FROM permissions p
+                 JOIN role_permissions rp ON rp.permission_id = p.id
+                 JOIN users u ON u.role_id = rp.role_id
+                 WHERE u.id = ? AND u.deleted_at IS NULL"
+            );
+            $stmt->execute([$userId]);
+            return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get all subordinate IDs for a manager (recursive).
+     */
+    public function getSubordinateIds($managerId) {
+        try {
+            $pdo = Database::getConnection();
+            $ids = [];
+            $queue = [$managerId];
+
+            while (!empty($queue)) {
+                $currentId = array_shift($queue);
+                $stmt = $pdo->prepare(
+                    "SELECT id FROM users WHERE manager_id = ? AND deleted_at IS NULL"
+                );
+                $stmt->execute([$currentId]);
+                $children = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                foreach ($children as $childId) {
+                    $ids[] = $childId;
+                    $queue[] = $childId;
+                }
+            }
+
+            return $ids;
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    private function unauthorized() {
         http_response_code(401);
         echo json_encode(['error' => 'Unauthorized']);
         exit();
