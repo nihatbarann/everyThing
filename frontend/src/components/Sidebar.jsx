@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { LayoutDashboard, Users, Settings, LogOut, Shield, CheckSquare, FileText, Globe, Megaphone, Bell } from 'lucide-react';
+// Removed Lucide imports: LayoutDashboard, Users, Settings, LogOut, Shield, ListTodo, StickyNote, Vault, Megaphone, Bell
 
 const Sidebar = ({ isOpen, onClose }) => {
   const [menus, setMenus] = useState([]);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  // Drag and Drop state
+  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+  const [dragOverItemIndex, setDragOverItemIndex] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -34,17 +38,70 @@ const Sidebar = ({ isOpen, onClose }) => {
     navigate('/login');
   };
 
+  const handleDragStart = (e, index) => {
+    setDraggedItemIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => e.target.classList.add('dragging'), 0);
+  };
+
+  const handleDragEnter = (e, index) => {
+    e.preventDefault();
+    if (index !== draggedItemIndex) {
+      setDragOverItemIndex(index);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragEnd = (e) => {
+    e.target.classList.remove('dragging');
+    setDraggedItemIndex(null);
+    setDragOverItemIndex(null);
+  };
+
+  const handleDrop = async (e, droppedOnIndex) => {
+    e.preventDefault();
+    if (draggedItemIndex === null || draggedItemIndex === droppedOnIndex) return;
+
+    const newMenus = [...menus];
+    const draggedItem = newMenus[draggedItemIndex];
+    
+    // Remove dragged item and insert at new position
+    newMenus.splice(draggedItemIndex, 1);
+    newMenus.splice(droppedOnIndex, 0, draggedItem);
+    
+    setMenus(newMenus);
+    setDragOverItemIndex(null);
+    
+    // Save to backend
+    const menuOrder = newMenus.map(m => m.id);
+    try {
+      await axios.post('/api/menus/order', { menu_order: menuOrder }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+    } catch (err) {
+
+    }
+  };
+
   const getIcon = (iconName) => {
     switch (iconName) {
-      case 'home':         return <LayoutDashboard />;
-      case 'users':        return <Users />;
-      case 'settings':     return <Settings />;
-      case 'CheckSquare':  return <CheckSquare />;
-      case 'file-text':    return <FileText />;
-      case 'globe':        return <Globe />;
-      case 'megaphone':    return <Megaphone />;
-      case 'bell':         return <Bell />;
-      default:             return <LayoutDashboard />;
+      case 'home':         return <i className="fa-solid fa-house"></i>;
+      case 'users':        return <i className="fa-solid fa-users"></i>;
+      case 'settings':     return <i className="fa-solid fa-gear"></i>;
+      case 'CheckSquare':  
+      case 'ListTodo':     return <i className="fa-solid fa-list-check"></i>;
+      case 'file-text':    
+      case 'StickyNote':   return <i className="fa-solid fa-note-sticky"></i>;
+      case 'globe':        
+      case 'Vault':        return <i className="fa-solid fa-vault"></i>;
+      case 'megaphone':    return <i className="fa-solid fa-bullhorn"></i>;
+      case 'bell':         return <i className="fa-solid fa-bell"></i>;
+      case 'wrench':       return <i className="fa-solid fa-wrench"></i>;
+      default:             return <i className="fa-solid fa-house"></i>;
     }
   };
 
@@ -68,7 +125,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* Logo */}
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">
-            <Shield size={20} />
+            <i className="fa-solid fa-shield-halved"></i>
           </div>
           <span className="sidebar-logo-text">EveryThing</span>
         </div>
@@ -77,15 +134,28 @@ const Sidebar = ({ isOpen, onClose }) => {
         <nav className="sidebar-nav">
           <div className="sidebar-section-label">Navigation</div>
 
-          {menus.map(menu => (
+          {menus.map((menu, index) => (
             <NavLink
               key={menu.id}
               to={menu.path}
-              onClick={handleNavClick}
+              draggable
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragEnter={(e) => handleDragEnter(e, index)}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              onDrop={(e) => handleDrop(e, index)}
+              onClick={(e) => {
+                if (draggedItemIndex !== null) {
+                  e.preventDefault();
+                } else {
+                  handleNavClick();
+                }
+              }}
               className={({ isActive }) =>
-                `sidebar-nav-item${isActive ? ' active' : ''}`
+                `sidebar-nav-item ${isActive ? 'active' : ''} ${dragOverItemIndex === index ? 'drag-over' : ''}`
               }
             >
+              <i className="fa-solid fa-grip-vertical drag-handle"></i>
               {getIcon(menu.icon)}
               <span>{menu.name}</span>
             </NavLink>
@@ -113,10 +183,12 @@ const Sidebar = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          <button className="sidebar-logout-btn" onClick={handleLogout}>
-            <LogOut />
+          <div className="sidebar-logout-btn group" onClick={handleLogout}>
+            <div className="ev-icon ev-icon-sm ev-icon-action ev-hover-error" style={{ marginRight: '0.75rem' }}>
+              <i className="fa-solid fa-right-from-bracket"></i>
+            </div>
             <span>Sign Out</span>
-          </button>
+          </div>
         </div>
 
       </aside>

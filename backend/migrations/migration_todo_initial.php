@@ -39,7 +39,7 @@ try {
     $stmt->execute();
     if (!$stmt->fetch()) {
         $pdo->exec("INSERT INTO `menus` (`name`, `path`, `icon`, `permission_key`) 
-                    VALUES ('Yapılacaklar', '/dashboard/todos', 'CheckSquare', 'todo_view')");
+                    VALUES ('Yapılacaklar', '/dashboard/todos', 'ListTodo', 'todo_view')");
         echo "Menu item 'Yapılacaklar' added.\n";
     }
 

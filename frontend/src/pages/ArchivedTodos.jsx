@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { 
-  ArrowLeft, Calendar, Loader, X, RotateCcw, AlertCircle, Archive, Search, Package
-} from 'lucide-react';
+// Lucide imports removed
 import { useNavigate } from 'react-router-dom';
 
 const ArchivedTodos = () => {
@@ -76,10 +74,10 @@ const ArchivedTodos = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-8 h-[calc(100vh-100px)] animate-in">
+    <div className="flex flex-col gap-6 pb-8 animate-in" style={{ minHeight: 'calc(100vh - 140px)' }}>
       <header className="flex items-center gap-4 flex-shrink-0">
-        <button onClick={() => navigate('/dashboard/todos')} className="um-btn-secondary !p-2">
-          <ArrowLeft className="w-5 h-5" />
+        <button onClick={() => navigate('/dashboard/todos')} className="ev-btn ev-btn-icon ev-btn-secondary" style={{ borderRadius: '50%' }}>
+          <i className="fa-solid fa-arrow-left"></i>
         </button>
         <div>
           <h1 className="text-4xl text-gradient">Arşivlenenler</h1>
@@ -88,13 +86,13 @@ const ArchivedTodos = () => {
         
         <div className="flex-1 max-w-md px-4">
           <div className="um-search-box !bg-white/5 border border-white/10 hover:border-primary/30 focus-within:border-primary/50 transition-all">
-            <Search className="w-4 h-4 text-muted" />
+            <i className="fa-solid fa-magnifying-glass" style={{ color: 'var(--text-muted)' }}></i>
             <input 
               type="text" 
               placeholder="Arşivde ara..." 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="um-search-input !text-white"
+              className="um-search-input !text-[var(--text-main)]"
             />
           </div>
         </div>
@@ -102,20 +100,20 @@ const ArchivedTodos = () => {
 
       {error && (
         <div className="um-alert-error animate-in flex-shrink-0">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" /><span>{error}</span>
+          <i className="fa-solid fa-circle-exclamation w-5 h-5 flex-shrink-0"></i><span>{error}</span>
         </div>
       )}
 
       {loading ? (
         <div className="um-loading-page flex-1">
-          <Loader className="w-8 h-8 animate-spin text-primary" />
+          <i className="fa-solid fa-spinner fa-spin w-8 h-8 text-primary"></i>
           <span>Arşiv yükleniyor...</span>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
           {todos.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-muted">
-              <Archive className="w-16 h-16 mb-4 opacity-20" />
+              <i className="fa-solid fa-box-archive w-16 h-16 mb-4 opacity-20"></i>
               <p className="text-xl">Arşivde görev bulunmuyor</p>
             </div>
           ) : (
@@ -136,7 +134,7 @@ const ArchivedTodos = () => {
                 return (
                   <div key={task.id} className="um-kanban-card card-todo group relative overflow-hidden opacity-90 hover:opacity-100 transition-opacity flex flex-col gap-2">
                     <div className="flex-1">
-                      <p className="text-xs text-white leading-relaxed whitespace-pre-wrap line-clamp-4">
+                      <p className="text-xs text-[var(--text-main)] leading-relaxed whitespace-pre-wrap line-clamp-4">
                         {task.description}
                       </p>
                     </div>
@@ -148,7 +146,7 @@ const ArchivedTodos = () => {
                         </span>
                         
                         <div className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded w-max bg-[hsla(0,0%,100%,0.05)]">
-                          <Calendar className="w-3 h-3" />
+                          <i className="fa-solid fa-calendar w-3 h-3"></i>
                           {formatDate(task.created_at)} {task.target_date ? `- ${formatDate(task.target_date)}` : ''}
                         </div>
                       </div>
@@ -160,14 +158,14 @@ const ArchivedTodos = () => {
                           className="p-1.5 rounded-md text-muted hover:bg-[hsla(210,100%,50%,0.2)] hover:text-[#3b82f6] transition-colors"
                           title="Geri Al (Unarchive)"
                         >
-                          <RotateCcw className="w-3.5 h-3.5" />
+                          <i className="fa-solid fa-rotate-left w-3.5 h-3.5"></i>
                         </button>
                         <button 
                           onClick={() => handleDelete(task.id)}
                           className="p-1.5 rounded-md text-muted hover:bg-[hsla(0,80%,50%,0.2)] hover:text-[#e74c3c] transition-colors"
                           title="Kalıcı Sil"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <i className="fa-solid fa-trash-can w-3.5 h-3.5"></i>
                         </button>
                       </div>
                     </div>

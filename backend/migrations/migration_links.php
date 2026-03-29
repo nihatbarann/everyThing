@@ -24,7 +24,7 @@ try {
     $stmt = $pdo->prepare("SELECT id FROM menus WHERE path = '/dashboard/links'");
     $stmt->execute();
     if (!$stmt->fetch()) {
-        $pdo->exec("INSERT INTO menus (name, path, icon, permission_key) VALUES ('Linkler', '/dashboard/links', 'globe', NULL)");
+        $pdo->exec("INSERT INTO menus (name, path, icon, permission_key) VALUES ('Linkler', '/dashboard/links', 'Vault', NULL)");
         $menu_id = $pdo->lastInsertId();
         
         $pdo->exec("INSERT IGNORE INTO role_menus (role_id, menu_id) VALUES (1, $menu_id)");

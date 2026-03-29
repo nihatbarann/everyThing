@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../Core/Database.php';
 require_once __DIR__ . '/../Core/AuthMiddleware.php';
+require_once __DIR__ . '/ActivityLogController.php';
 
 class LinkController {
 
@@ -36,7 +37,11 @@ class LinkController {
             $pdo = Database::getConnection();
             $stmt = $pdo->prepare("INSERT INTO links (user_id, title, url, username, password, notes) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->execute([$user['user_id'], $title, $url, $username, $password, $notes]);
-            echo json_encode(['success' => true, 'id' => $pdo->lastInsertId()]);
+            
+            $newId = $pdo->lastInsertId();
+            ActivityLogController::log($user['user_id'], $user['username'], 'link.create', "Created link \"{$title}\"", 'link', $newId);
+
+            echo json_encode(['success' => true, 'id' => $newId]);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Server error']);
@@ -65,6 +70,9 @@ class LinkController {
                 $data['notes'] ?? '',
                 $id
             ]);
+            
+            ActivityLogController::log($user['user_id'], $user['username'], 'link.update', "Updated link ID {$id}", 'link', $id);
+
             echo json_encode(['success' => true]);
         } catch (Exception $e) {
             http_response_code(500);
@@ -84,6 +92,9 @@ class LinkController {
 
             $stmt = $pdo->prepare("DELETE FROM links WHERE id = ?");
             $stmt->execute([$id]);
+            
+            ActivityLogController::log($user['user_id'], $user['username'], 'link.delete', "Deleted link ID {$id}", 'link', $id);
+
             echo json_encode(['success' => true]);
         } catch (Exception $e) {
             http_response_code(500);

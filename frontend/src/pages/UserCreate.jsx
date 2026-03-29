@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, ArrowLeft, AlertCircle, CheckCircle2, Loader } from 'lucide-react';
+// Lucide imports removed
 
 const UserCreate = () => {
   const [formData, setFormData] = useState({
@@ -87,9 +87,9 @@ const UserCreate = () => {
   return (
     <div className="flex flex-col gap-6 pb-8 animate-in">
       <header className="flex items-center gap-4">
-        <button onClick={() => navigate('/dashboard/users')} className="um-back-btn">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        <div onClick={() => navigate('/dashboard/users')} className="ev-btn ev-btn-icon ev-btn-secondary" style={{ cursor: 'pointer', borderRadius: '50%' }}>
+          <i className="fa-solid fa-arrow-left"></i>
+        </div>
         <div>
           <h1 className="text-4xl mb-1 text-gradient">Create New User</h1>
           <p className="text-muted">Set up a new employee account</p>
@@ -98,13 +98,13 @@ const UserCreate = () => {
 
       {error && (
         <div className="um-alert-error animate-in">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <i className="fa-solid fa-circle-exclamation w-5 h-5 flex-shrink-0"></i>
           <span>{error}</span>
         </div>
       )}
       {success && (
         <div className="um-alert-success animate-in">
-          <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+          <i className="fa-solid fa-circle-check w-5 h-5 flex-shrink-0"></i>
           <span>{success}</span>
         </div>
       )}
@@ -114,7 +114,7 @@ const UserCreate = () => {
         {/* Account Information */}
         <div className="premium-card delay-1">
           <div className="um-section-header">
-            <div className="icon-box"><UserPlus className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-primary"><i className="fa-solid fa-user-plus"></i></div>
             <h2>Account Information</h2>
           </div>
           <div className="um-field-grid">
@@ -158,7 +158,7 @@ const UserCreate = () => {
         {/* Personal Information */}
         <div className="premium-card delay-2">
           <div className="um-section-header">
-            <div className="icon-box purple"><UserPlus className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-purple"><i className="fa-solid fa-user-plus"></i></div>
             <h2>Personal Information</h2>
           </div>
           <div className="um-field-grid">
@@ -197,7 +197,7 @@ const UserCreate = () => {
         {/* Contact Information */}
         <div className="premium-card delay-3">
           <div className="um-section-header">
-            <div className="icon-box success"><UserPlus className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-success"><i className="fa-solid fa-user-plus"></i></div>
             <h2>Contact Information</h2>
           </div>
           <div className="um-field-grid">
@@ -242,7 +242,7 @@ const UserCreate = () => {
         {/* Work Information */}
         <div className="premium-card delay-1">
           <div className="um-section-header">
-            <div className="icon-box warning"><UserPlus className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-warning"><i className="fa-solid fa-user-plus"></i></div>
             <h2>Work Information</h2>
           </div>
           <div className="um-field-grid">
@@ -291,12 +291,21 @@ const UserCreate = () => {
 
         {/* Submit */}
         <div className="um-form-actions">
-          <button type="button" onClick={() => navigate('/dashboard/users')} className="um-btn-secondary">
+          <button type="button" onClick={() => navigate('/dashboard/users')} className="ev-btn ev-btn-secondary">
             Cancel
           </button>
-          <button type="submit" className="um-btn-primary" disabled={loading}>
-            {loading ? <><Loader className="w-4 h-4 animate-spin" /> Creating...</>
-              : <><UserPlus className="w-4 h-4" /> Create User</>}
+          <button type="submit" className="ev-btn ev-btn-primary" disabled={loading}>
+            {loading ? (
+              <>
+                <i className="fa-solid fa-spinner fa-spin"></i>
+                Creating...
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-user-plus"></i>
+                Create User
+              </>
+            )}
           </button>
         </div>
       </form>

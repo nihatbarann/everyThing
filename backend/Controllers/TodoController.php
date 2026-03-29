@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../Core/Database.php';
 require_once __DIR__ . '/../Core/AuthMiddleware.php';
+require_once __DIR__ . '/ActivityLogController.php';
 
 class TodoController {
 
@@ -78,7 +79,11 @@ class TodoController {
                 $data['priority'] ?? 'medium'
             ]);
             
-            echo json_encode(['success' => true, 'id' => $pdo->lastInsertId()]);
+            $newId = $pdo->lastInsertId();
+            $title = $data['title'] ?? 'Untitled';
+            ActivityLogController::log($user['user_id'], $user['username'], 'todo.create', "Created todo \"{$title}\"", 'todo', $newId);
+
+            echo json_encode(['success' => true, 'id' => $newId]);
         } catch (Exception $e) {
             file_put_contents(__DIR__ . '/../error.log', $e->getMessage() . "\n", FILE_APPEND);
             http_response_code(500);
@@ -140,6 +145,8 @@ class TodoController {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
 
+            ActivityLogController::log($user['user_id'], $user['username'], 'todo.update', "Updated todo ID {$id}", 'todo', $id);
+
             echo json_encode(['success' => true]);
         } catch (Exception $e) {
             http_response_code(500);
@@ -175,6 +182,8 @@ class TodoController {
             $stmt = $pdo->prepare("UPDATE todos SET status = ? WHERE id = ?");
             $stmt->execute([$data['status'], $id]);
 
+            ActivityLogController::log($user['user_id'], $user['username'], 'todo.update_status', "Updated status to {$data['status']} for todo ID {$id}", 'todo', $id);
+
             echo json_encode(['success' => true]);
         } catch (Exception $e) {
             http_response_code(500);
@@ -202,6 +211,8 @@ class TodoController {
             $stmt = $pdo->prepare("DELETE FROM todos WHERE id = ?");
             $stmt->execute([$id]);
 
+            ActivityLogController::log($user['user_id'], $user['username'], 'todo.delete', "Deleted todo ID {$id}", 'todo', $id);
+
             echo json_encode(['success' => true]);
         } catch (Exception $e) {
             http_response_code(500);
@@ -228,6 +239,8 @@ class TodoController {
             $stmt = $pdo->prepare("UPDATE todos SET is_archived = 1 WHERE id = ?");
             $stmt->execute([$id]);
 
+            ActivityLogController::log($user['user_id'], $user['username'], 'todo.archive', "Archived todo ID {$id}", 'todo', $id);
+
             echo json_encode(['success' => true]);
         } catch (Exception $e) {
             http_response_code(500);
@@ -253,6 +266,8 @@ class TodoController {
 
             $stmt = $pdo->prepare("UPDATE todos SET is_archived = 0 WHERE id = ?");
             $stmt->execute([$id]);
+
+            ActivityLogController::log($user['user_id'], $user['username'], 'todo.unarchive', "Unarchived todo ID {$id}", 'todo', $id);
 
             echo json_encode(['success' => true]);
         } catch (Exception $e) {

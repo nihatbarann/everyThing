@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../Core/AuthMiddleware.php';
 require_once __DIR__ . '/../Core/Database.php';
+require_once __DIR__ . '/ActivityLogController.php';
 
 class AnnouncementController {
     
@@ -133,7 +134,11 @@ class AnnouncementController {
                 $user['user_id']
             ]);
 
-            echo json_encode(['success' => true, 'message' => 'Announcement created successfully', 'id' => $pdo->lastInsertId()]);
+            $newId = $pdo->lastInsertId();
+            $title = trim($data['title']);
+            ActivityLogController::log($user['user_id'], $user['username'], 'announcement.create', "Created announcement \"{$title}\"", 'announcement', $newId);
+
+            echo json_encode(['success' => true, 'message' => 'Announcement created successfully', 'id' => $newId]);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Server error: ' . $e->getMessage()]);
@@ -186,6 +191,8 @@ class AnnouncementController {
                 }
             }
 
+            ActivityLogController::log($user['user_id'], $user['username'], 'announcement.update', "Updated announcement ID {$id}", 'announcement', $id);
+
             echo json_encode(['success' => true, 'message' => 'Announcement updated successfully']);
         } catch (Exception $e) {
             http_response_code(500);
@@ -211,6 +218,8 @@ class AnnouncementController {
                 echo json_encode(['error' => 'Announcement not found or already deleted']);
                 return;
             }
+
+            ActivityLogController::log($user['user_id'], $user['username'], 'announcement.delete', "Deleted announcement ID {$id}", 'announcement', $id);
 
             echo json_encode(['success' => true, 'message' => 'Announcement deleted successfully']);
         } catch (Exception $e) {

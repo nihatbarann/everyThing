@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { 
-  Plus, MoreVertical, Calendar, Clock, CheckCircle2, 
-  Circle, AlertCircle, Loader, GripVertical, X, Package, Search, Pencil
-} from 'lucide-react';
+// Lucide imports removed
 import { useNavigate } from 'react-router-dom';
 
 const Todos = () => {
@@ -239,7 +237,7 @@ const Todos = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-8 h-[calc(100vh-100px)] animate-in">
+    <div className="flex flex-col gap-6 pb-8 animate-in" style={{ minHeight: 'calc(100vh - 140px)' }}>
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 flex-shrink-0">
         <div>
           <h1 className="text-4xl mb-2 text-gradient">Yapılacaklar</h1>
@@ -248,7 +246,7 @@ const Todos = () => {
         
         <div className="flex-1 max-w-md px-4">
           <div className="um-search-box !bg-white/5 border border-white/10 hover:border-primary/30 focus-within:border-primary/50 transition-all">
-            <Search className="w-4 h-4 text-muted" />
+            <i className="fa-solid fa-magnifying-glass" style={{ color: 'var(--text-muted)' }}></i>
             <input 
               type="text" 
               placeholder="Görevlerde ara..." 
@@ -261,41 +259,42 @@ const Todos = () => {
 
         <div className="flex gap-2 items-end">
           {hasPerm('todo_view') && (
-            <button onClick={() => navigate('/dashboard/todos/archived')} className="um-btn-secondary">
-              <Package className="w-4 h-4" /> <span>Arşivlenenler</span>
+            <button onClick={() => navigate('/dashboard/todos/archived')} className="ev-btn ev-btn-secondary">
+              <i className="fa-solid fa-box-open"></i> <span>Arşivlenenler</span>
             </button>
           )}
-          <button onClick={() => setShowModal(true)} className="um-btn-primary">
-            <Plus className="w-4 h-4" /> <span>Yeni Görev</span>
-          </button>
+          <div onClick={() => setShowModal(true)} className="ev-btn ev-btn-primary" style={{ cursor: 'pointer' }}>
+            <i className="fa-solid fa-plus"></i>
+            <span>Yeni Görev</span>
+          </div>
         </div>
       </header>
 
       {error && (
         <div className="um-alert-error animate-in flex-shrink-0">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" /><span>{error}</span>
+          <i className="fa-solid fa-circle-exclamation w-5 h-5 flex-shrink-0"></i><span>{error}</span>
         </div>
       )}
 
       {loading ? (
         <div className="um-loading-page flex-1">
-          <Loader className="w-8 h-8 animate-spin text-primary" />
+          <i className="fa-solid fa-spinner fa-spin w-8 h-8 text-primary"></i>
           <span>Panolar yükleniyor...</span>
         </div>
       ) : (
-        <div className="flex-1 grid-container grid-cols-3 h-full" style={{ minWidth: '900px', overflowX: 'auto' }}>
+        <div className="flex-1 grid-container grid-cols-3" style={{ minWidth: '900px', overflowX: 'auto', minHeight: 0 }}>
           
-          {/* TO DO COLUMN (Yapılacak - Yellow) */}
+          {/* TO DO COLUMN (Yapılacak - Green) */}
           <div 
-            className="flex flex-col rounded-2xl bg-[hsla(45,100%,45%,0.15)] border border-[hsla(45,100%,45%,0.35)] overflow-hidden delay-1"
+            className="flex flex-col rounded-2xl bg-[hsla(150,80%,40%,0.15)] border border-[hsla(150,80%,40%,0.35)] overflow-hidden delay-1"
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, 'todo')}
           >
-            <div className="p-4 border-b border-[hsla(45,100%,45%,0.25)] bg-[hsla(45,100%,45%,0.2)] flex items-center justify-between">
-              <h2 className="font-bold flex items-center gap-2 text-[#f1c40f]">
-                <Circle className="w-5 h-5" /> Yapılacak
+            <div className="p-4 border-b border-[hsla(150,80%,40%,0.25)] bg-[hsla(150,80%,40%,0.2)] flex items-center justify-between">
+              <h2 className="font-bold flex items-center gap-2 text-[#2ecc71]">
+                <i className="fa-solid fa-circle-dot w-5 h-5"></i> Yapılacak
               </h2>
-              <span className="badge warning bg-[#f1c40f] text-white border-none">{todos.todo.length}</span>
+              <span className="badge positive bg-[#2ecc71] text-white border-none">{todos.todo.length}</span>
             </div>
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 um-kanban-column">
               {todos.todo.filter(t => 
@@ -313,17 +312,17 @@ const Todos = () => {
             </div>
           </div>
 
-          {/* IN PROGRESS COLUMN (Yapılıyor - Red) */}
+          {/* IN PROGRESS COLUMN (Yapılıyor - Yellow) */}
           <div 
-            className="flex flex-col rounded-2xl bg-[hsla(0,80%,50%,0.15)] border border-[hsla(0,80%,50%,0.35)] overflow-hidden delay-2"
+            className="flex flex-col rounded-2xl bg-[hsla(45,100%,45%,0.15)] border border-[hsla(45,100%,45%,0.35)] overflow-hidden delay-2"
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, 'in_progress')}
           >
-            <div className="p-4 border-b border-[hsla(0,80%,50%,0.25)] bg-[hsla(0,80%,50%,0.2)] flex items-center justify-between">
-              <h2 className="font-bold flex items-center gap-2 text-[#e74c3c]">
-                <Clock className="w-5 h-5" /> Yapılıyor
+            <div className="p-4 border-b border-[hsla(45,100%,45%,0.25)] bg-[hsla(45,100%,45%,0.2)] flex items-center justify-between">
+              <h2 className="font-bold flex items-center gap-2 text-[#f1c40f]">
+                <i className="fa-solid fa-stopwatch w-5 h-5"></i> Yapılıyor
               </h2>
-              <span className="badge danger bg-[#e74c3c] text-white border-none">{todos.in_progress.length}</span>
+              <span className="badge warning bg-[#f1c40f] text-white border-none">{todos.in_progress.length}</span>
             </div>
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 um-kanban-column">
               {todos.in_progress.filter(t => 
@@ -341,17 +340,17 @@ const Todos = () => {
             </div>
           </div>
 
-          {/* DONE COLUMN (Yapıldı - Green) */}
+          {/* DONE COLUMN (Yapıldı - Red) */}
           <div 
-            className="flex flex-col rounded-2xl bg-[hsla(150,80%,40%,0.15)] border border-[hsla(150,80%,40%,0.35)] overflow-hidden delay-3"
+            className="flex flex-col rounded-2xl bg-[hsla(0,80%,50%,0.15)] border border-[hsla(0,80%,50%,0.35)] overflow-hidden delay-3"
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, 'done')}
           >
-            <div className="p-4 border-b border-[hsla(150,80%,40%,0.25)] bg-[hsla(150,80%,40%,0.2)] flex items-center justify-between">
-              <h2 className="font-bold flex items-center gap-2 text-[#2ecc71]">
-                <CheckCircle2 className="w-5 h-5" /> Yapıldı
+            <div className="p-4 border-b border-[hsla(0,80%,50%,0.25)] bg-[hsla(0,80%,50%,0.2)] flex items-center justify-between">
+              <h2 className="font-bold flex items-center gap-2 text-[#e74c3c]">
+                <i className="fa-solid fa-circle-check w-5 h-5"></i> Yapıldı
               </h2>
-              <span className="badge positive bg-[#2ecc71] text-white border-none">{todos.done.length}</span>
+              <span className="badge negative bg-[#e74c3c] text-white border-none">{todos.done.length}</span>
             </div>
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 um-kanban-column">
               {todos.done.filter(t => 
@@ -372,7 +371,7 @@ const Todos = () => {
         </div>
       )}
 
-      {showModal && (
+      {showModal && createPortal(
         <div className="um-modal-overlay" onClick={closePortal}>
           <div className="um-modal !max-w-md" onClick={e => e.stopPropagation()}>
             <h3 className="mb-4">{editingTask ? 'Görevi Düzenle' : 'Yeni Görev Ekle'}</h3>
@@ -407,14 +406,15 @@ const Todos = () => {
                 </select>
               </div>
               <div className="um-modal-actions">
-                <button type="button" onClick={closePortal} className="um-btn-secondary">İptal</button>
-                <button type="submit" className="um-btn-primary" disabled={saving}>
-                  {saving ? <Loader className="w-4 h-4 animate-spin"/> : (editingTask ? 'Güncelle' : 'Oluştur')}
+                <button type="button" onClick={closePortal} className="ev-btn ev-btn-secondary">İptal</button>
+                <button type="submit" className="ev-btn ev-btn-primary" disabled={saving}>
+                  {saving ? <i className="fa-solid fa-spinner fa-spin"></i> : (editingTask ? 'Güncelle' : 'Oluştur')}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
@@ -465,34 +465,35 @@ const TaskCard = ({ task, listId, onDragStart, onDragEnd, onDelete, onArchive, o
                ? 'bg-[hsla(350,80%,50%,0.15)] text-[var(--error)]' 
                : 'bg-[hsla(0,0%,100%,0.05)] text-muted'
            }`}>
-             <Calendar className="w-3 h-3" />
+             <i className="fa-solid fa-calendar-days w-3 h-3"></i>
              {formatDate(task.created_at)} {task.target_date ? `- ${formatDate(task.target_date)}` : ''}
            </div>
         </div>
 
         {/* Horizontal Action Buttons */}
-        <div className="flex items-center gap-1 shrink-0 bg-black/20 p-1 rounded-lg border border-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <button 
+        {/* Horizontal Action Boxes */}
+        <div className="flex items-center gap-1.5 shrink-0 bg-black/30 p-1.5 rounded-xl border border-white/5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+          <div 
             onClick={() => onEdit(task)}
-            className="p-1.5 rounded-md text-muted hover:bg-[hsla(210,100%,50%,0.2)] hover:text-[#3b82f6] transition-colors"
+            className="ev-icon ev-icon-sm ev-icon-action"
             title="Düzenle"
           >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button 
+            <i className="fa-solid fa-pen-to-square"></i>
+          </div>
+          <div 
             onClick={() => onArchive(task.id)}
-            className="p-1.5 rounded-md text-muted hover:bg-[hsla(150,80%,40%,0.2)] hover:text-[#2ecc71] transition-colors"
+            className="ev-icon ev-icon-sm ev-icon-action ev-hover-success"
             title="Arşivle"
           >
-            <Package className="w-3.5 h-3.5" />
-          </button>
-          <button 
+            <i className="fa-solid fa-box-archive"></i>
+          </div>
+          <div 
             onClick={() => onDelete(task.id)}
-            className="p-1.5 rounded-md text-muted hover:bg-[hsla(0,80%,50%,0.2)] hover:text-[#e74c3c] transition-colors"
+            className="ev-icon ev-icon-sm ev-icon-action ev-hover-error"
             title="Sil"
           >
-            <X className="w-3.5 h-3.5" />
-          </button>
+            <i className="fa-solid fa-trash-can"></i>
+          </div>
         </div>
       </div>
     </div>

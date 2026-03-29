@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Eye, Edit3, Shield, User as UserIcon, AlertCircle, Search, ToggleLeft, ToggleRight, Users as UsersIcon } from 'lucide-react';
+// Lucide imports removed
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -96,19 +96,20 @@ const Users = () => {
           <p className="text-muted text-lg">Manage access control and employee accounts</p>
         </div>
         {hasPerm('user_create') && (
-          <button
+          <div
             onClick={() => navigate('/dashboard/users/create')}
-            className="um-btn-primary"
+            className="ev-btn ev-btn-primary"
+            style={{ cursor: 'pointer' }}
           >
-            <UserPlus className="w-4 h-4" />
+            <i className="fa-solid fa-user-plus"></i>
             <span>Create User</span>
-          </button>
+          </div>
         )}
       </header>
 
       {error && (
         <div className="um-alert-error animate-in">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <i className="fa-solid fa-circle-exclamation" style={{ flexShrink: 0 }}></i>
           <span>{error}</span>
         </div>
       )}
@@ -117,7 +118,7 @@ const Users = () => {
       <div className="premium-card p-4">
         <div className="um-filters">
           <div className="um-search-box">
-            <Search className="w-4 h-4 text-muted" />
+            <i className="fa-solid fa-magnifying-glass" style={{ color: 'var(--text-muted)' }}></i>
             <input
               type="text"
               placeholder="Search by name or username..."
@@ -147,7 +148,7 @@ const Users = () => {
       <div className="premium-card p-0 overflow-hidden delay-1">
         <div className="p-6 border-b border-[var(--glass-border)] flex items-center justify-between bg-[var(--bg-surface)]">
           <h2 className="text-xl font-bold flex items-center gap-2">
-            <UsersIcon className="w-5 h-5 text-primary" /> Directory
+            <i className="fa-solid fa-users" style={{ color: 'var(--primary)' }}></i> Directory
           </h2>
           <div className="badge positive">
             {filtered.length} / {users.length} Users
@@ -186,7 +187,7 @@ const Users = () => {
                     <td className="text-muted font-mono text-sm">@{u.username}</td>
                     <td>
                       <div className={`badge ${u.role_name === 'Admin' ? 'positive' : ''}`}>
-                        {u.role_name === 'Admin' ? <Shield className="w-3 h-3" /> : <UserIcon className="w-3 h-3" />}
+                        {u.role_name === 'Admin' ? <i className="fa-solid fa-shield-halved" style={{ fontSize: '0.75rem' }}></i> : <i className="fa-solid fa-user" style={{ fontSize: '0.75rem' }}></i>}
                         {u.role_name}
                       </div>
                     </td>
@@ -199,32 +200,32 @@ const Users = () => {
                     </td>
                     <td>
                       <div className="um-actions">
-                        <button
+                        <div
                           onClick={() => navigate(`/dashboard/users/${u.id}`)}
-                          className="um-action-btn"
+                          className="ev-icon ev-icon-sm ev-icon-action"
                           title="View Profile"
                         >
-                          <Eye className="w-4 h-4" />
-                        </button>
+                          <i className="fa-solid fa-eye"></i>
+                        </div>
 
                         {hasPerm('user_update') && (
-                          <button
+                          <div
                             onClick={() => navigate(`/dashboard/users/${u.id}/edit`)}
-                            className="um-action-btn"
+                            className="ev-icon ev-icon-sm ev-icon-action"
                             title="Edit User"
                           >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
+                            <i className="fa-solid fa-pen-to-square"></i>
+                          </div>
                         )}
 
                         {hasPerm('user_update') && (
-                          <button
+                          <div
                             onClick={() => handleToggleStatus(u.id)}
-                            className={`um-action-btn ${u.is_active == 1 ? 'text-success' : 'text-warning'}`}
+                            className={`ev-icon ev-icon-sm ev-icon-action ${u.is_active == 1 ? 'ev-hover-warning' : 'ev-hover-success'}`}
                             title={u.is_active == 1 ? 'Deactivate' : 'Activate'}
                           >
-                            {u.is_active == 1 ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                          </button>
+                            {u.is_active == 1 ? <i className="fa-solid fa-toggle-on"></i> : <i className="fa-solid fa-toggle-off"></i>}
+                          </div>
                         )}
                       </div>
                     </td>

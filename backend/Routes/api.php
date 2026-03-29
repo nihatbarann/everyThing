@@ -59,9 +59,21 @@ $router->post('/api/announcements', 'AnnouncementController@create');
 $router->put('/api/announcements/{id}', 'AnnouncementController@update');
 $router->delete('/api/announcements/{id}', 'AnnouncementController@delete');
 
+// Calendar endpoints
+$router->get('/api/calendar', 'CalendarController@index');
+$router->post('/api/calendar', 'CalendarController@create');
+$router->put('/api/calendar/{id}', 'CalendarController@update');
+$router->delete('/api/calendar/{id}', 'CalendarController@delete');
+
 // System Management
 $router->post('/api/system/optimize', 'SystemController@optimize');
 $router->get('/api/system/config', 'SystemController@getConfig');
 $router->put('/api/system/config', 'SystemController@updateConfig');
 $router->get('/api/system/db-info', 'SystemController@getDbInfo');
 $router->get('/api/system/export-db', 'SystemController@exportDb');
+
+// Activity Logs (admin-only)
+$router->get('/api/activity-logs', 'ActivityLogController@index');
+
+// Menu Order (per-user)
+$router->post('/api/menus/order', 'MenuController@saveOrder');

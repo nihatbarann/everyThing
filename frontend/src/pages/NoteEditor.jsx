@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Loader, CircleCheck, Clock } from 'lucide-react';
 import ReactQuill from 'react-quill-new';
 import 'quill/dist/quill.snow.css';
 
 const NoteEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const isNew = id === 'new';
   const [note, setNote] = useState({ title: '', content: '' });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [savedOk, setSavedOk] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
 
   useEffect(() => {
-    fetchNote();
+    if (!isNew) {
+      fetchNote();
+    }
   }, [id]);
 
   const fetchNote = async () => {
@@ -33,19 +35,37 @@ const NoteEditor = () => {
   const handleSave = async (auto = false) => {
     if(!auto) setSaving(true);
     try {
-      await axios.put(`/api/notes/${id}`, note, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      if (isNew) {
+        // Create new note
+        const res = await axios.post('/api/notes', {
+          title: note.title || 'İsimsiz Not',
+          content: note.content
+        }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (res.data.id) {
+          navigate(`/dashboard/notes/${res.data.id}`, { replace: true });
+        }
+      } else {
+        // Update existing note — send only title and content
+        await axios.put(`/api/notes/${id}`, {
+          title: note.title,
+          content: note.content
+        }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+      }
       setLastSaved(new Date());
       if(!auto) {
         setSavedOk(true);
         setTimeout(() => setSavedOk(false), 2000);
       }
-    } catch(err) { } 
-    finally { if(!auto) setSaving(false); }
-  };
+    } catch(err) {
 
-  // Optional: Auto-save debounce (skipping complex useEffects for manual trigger, but UX looks better with manual for now)
+    } finally {
+      if(!auto) setSaving(false);
+    }
+  };
 
   const modules = {
     toolbar: [
@@ -58,57 +78,62 @@ const NoteEditor = () => {
     ]
   };
 
-  if (loading) return <div className="flex items-center justify-center p-20"><Loader className="w-8 h-8 animate-spin text-primary"/></div>;
+  if (loading) return <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 120px)' }}><i className="fa-solid fa-spinner fa-spin w-8 h-8 text-primary"></i></div>;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] animate-in gap-4 max-w-4xl mx-auto w-full relative">
+    <div className="note-editor-root animate-in">
       
-      {/* Sticky Top Bar - Notion Style */}
-      <header className="sticky top-0 z-30 flex items-center justify-between pb-4 pt-2 mb-4 border-b border-[var(--glass-border)] bg-[var(--bg-main)]/80 backdrop-blur-md">
-        <div className="flex items-center gap-2">
+      {/* Premium Top Bar */}
+      <header className="note-editor-topbar">
+        <div className="note-editor-breadcrumb">
           <button 
             onClick={() => navigate('/dashboard/notes')} 
-            className="p-2 hover:bg-[hsla(0,0%,50%,0.1)] rounded-md text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors flex items-center gap-1"
+            className="note-editor-back-btn"
             title="Notlara Dön"
           >
-            <ArrowLeft className="w-5 h-5"/>
-            <span className="text-sm font-medium hidden sm:inline">Notlarım</span>
+            <i className="fa-solid fa-arrow-left"></i>
+            <span>Notlarım</span>
           </button>
-          <span className="text-[var(--text-muted)] opacity-50 select-none">/</span>
-          <span className="text-sm text-[var(--text-muted)] truncate max-w-[150px] sm:max-w-xs">{note.title || 'İsimsiz'}</span>
+          <span className="note-editor-breadcrumb-sep">/</span>
+          <span className="note-editor-breadcrumb-title">{isNew ? 'Yeni Not' : (note.title || 'İsimsiz')}</span>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="note-editor-actions">
           {lastSaved && (
-            <div className="text-xs text-[var(--text-muted)] hidden sm:flex items-center gap-1">
-              <Clock className="w-3 h-3"/> Son kaydetme {lastSaved.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+            <div className="note-editor-save-status">
+              <i className="fa-solid fa-clock-rotate-left"></i>
+              <span>Son kayıt {lastSaved.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
             </div>
           )}
           <button 
             onClick={() => handleSave(false)} 
             disabled={saving} 
-            className="um-btn-primary h-9 px-4 text-sm transiton-all"
+            className="ev-btn ev-btn-primary ev-btn-sm"
           >
-            {saving ? <Loader className="w-4 h-4 animate-spin"/> : savedOk ? <CircleCheck className="w-4 h-4"/> : <Save className="w-4 h-4"/>}
-            <span className="hidden sm:inline">{savedOk ? 'Kaydedildi' : 'Kaydet'}</span>
+            {saving ? <i className="fa-solid fa-spinner fa-spin"></i> : savedOk ? <i className="fa-solid fa-circle-check"></i> : <i className="fa-solid fa-floppy-disk"></i>}
+            <span>{savedOk ? 'Kaydedildi!' : (isNew ? 'Oluştur' : 'Kaydet')}</span>
           </button>
         </div>
       </header>
 
-      {/* Editor Canvas Container */}
-      <div className="flex-1 flex flex-col px-4 sm:px-10 pb-20 overflow-y-auto custom-scrollbar">
+      {/* Editor Canvas */}
+      <div className="note-editor-canvas">
         
-        {/* Huge Document Title Input */}
+        {/* Title Input */}
         <input 
           type="text" 
           value={note.title} 
           onChange={e => setNote({...note, title: e.target.value})}
           placeholder="Not Başlığı"
-          className="text-4xl sm:text-5xl font-extrabold bg-transparent border-none outline-none focus:ring-0 w-full p-0 py-6 text-[var(--text-main)] placeholder-[var(--text-muted)]/50 tracking-tight"
+          className="note-editor-title-input"
+          autoFocus={isNew}
         />
 
+        {/* Divider */}
+        <div className="note-editor-divider"></div>
+
         {/* Rich Text ReactQuill */}
-        <div className="quill-premium-wrapper flex-1">
+        <div className="quill-premium-wrapper note-editor-quill-wrapper">
           <ReactQuill 
             theme="snow" 
             value={note.content} 

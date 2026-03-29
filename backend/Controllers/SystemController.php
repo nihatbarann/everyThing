@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../Core/AuthMiddleware.php';
+require_once __DIR__ . '/ActivityLogController.php';
 
 class SystemController {
     
@@ -19,6 +20,8 @@ class SystemController {
                 $result = $optStmt->fetchAll();
                 $results[$table] = $result[0]['Msg_text'] ?? 'OK';
             }
+
+            ActivityLogController::log($user['user_id'], $user['username'], 'system.optimize', 'Optimized database tables');
 
             echo json_encode([
                 'success' => true, 
@@ -52,7 +55,7 @@ class SystemController {
      * Updates system configuration.
      */
     public function updateConfig() {
-        $this->requireAdmin();
+        $user = $this->requireAdmin();
         $data = json_decode(file_get_contents('php://input'), true);
         $configFile = __DIR__ . '/../config/system.json';
         
@@ -66,6 +69,9 @@ class SystemController {
         }
 
         file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
+        
+        ActivityLogController::log($user['user_id'], $user['username'], 'system.config_update', 'Updated system configuration');
+
         echo json_encode(['success' => true, 'config' => $config]);
     }
 
@@ -88,7 +94,7 @@ class SystemController {
      * Triggers a database export. This is a basic backup mechanism.
      */
     public function exportDb() {
-        $this->requireAdmin();
+        $user = $this->requireAdmin();
         
         try {
             $pdo = Database::getConnection();
@@ -123,6 +129,8 @@ class SystemController {
             header('Content-Disposition: attachment; filename="everything_backup_' . date('Ymd_His') . '.sql"');
             echo $sql;
             
+            ActivityLogController::log($user['user_id'], $user['username'], 'system.export_db', 'Exported full database backup');
+
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Export failed: ' . $e->getMessage()]);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, AlertCircle, CheckCircle2, Loader, Edit3, User as UserIcon } from 'lucide-react';
+// Lucide imports removed
 
 const UserEdit = () => {
   const { id } = useParams();
@@ -113,7 +113,7 @@ const UserEdit = () => {
   if (loading || !formData) {
     return (
       <div className="um-loading-page animate-in">
-        <Loader className="w-8 h-8 animate-spin text-primary" />
+        <i className="fa-solid fa-spinner fa-spin w-8 h-8 text-primary"></i>
         <span>Loading user data...</span>
       </div>
     );
@@ -122,9 +122,9 @@ const UserEdit = () => {
   return (
     <div className="flex flex-col gap-6 pb-8 animate-in">
       <header className="flex items-center gap-4">
-        <button onClick={() => navigate(`/dashboard/users/${id}`)} className="um-back-btn">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        <div onClick={() => navigate(`/dashboard/users/${id}`)} className="ev-btn ev-btn-icon ev-btn-secondary" style={{ cursor: 'pointer', borderRadius: '50%' }}>
+          <i className="fa-solid fa-arrow-left"></i>
+        </div>
         <div>
           <h1 className="text-4xl mb-1 text-gradient">Edit User</h1>
           <p className="text-muted">Editing @{formData._username} ({formData._role_name})</p>
@@ -133,12 +133,12 @@ const UserEdit = () => {
 
       {error && (
         <div className="um-alert-error animate-in">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" /><span>{error}</span>
+          <i className="fa-solid fa-circle-exclamation w-5 h-5 flex-shrink-0"></i><span>{error}</span>
         </div>
       )}
       {success && (
         <div className="um-alert-success animate-in">
-          <CheckCircle2 className="w-5 h-5 flex-shrink-0" /><span>{success}</span>
+          <i className="fa-solid fa-circle-check w-5 h-5 flex-shrink-0"></i><span>{success}</span>
         </div>
       )}
 
@@ -147,7 +147,7 @@ const UserEdit = () => {
         {/* Account Settings */}
         <div className="premium-card delay-1">
           <div className="um-section-header">
-            <div className="icon-box"><Edit3 className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-primary"><i className="fa-solid fa-pen-to-square"></i></div>
             <h2>Account Settings</h2>
           </div>
           <div className="um-field-grid">
@@ -186,7 +186,7 @@ const UserEdit = () => {
         {/* Personal Information */}
         <div className="premium-card delay-2">
           <div className="um-section-header">
-            <div className="icon-box purple"><UserIcon className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-purple"><i className="fa-solid fa-user"></i></div>
             <h2>Personal Information</h2>
           </div>
           <div className="um-field-grid">
@@ -225,7 +225,7 @@ const UserEdit = () => {
         {/* Contact Information */}
         <div className="premium-card delay-3">
           <div className="um-section-header">
-            <div className="icon-box success"><UserIcon className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-success"><i className="fa-solid fa-address-book"></i></div>
             <h2>Contact Information</h2>
           </div>
           <div className="um-field-grid">
@@ -263,7 +263,7 @@ const UserEdit = () => {
         {/* Work Information */}
         <div className="premium-card delay-1">
           <div className="um-section-header">
-            <div className="icon-box warning"><UserIcon className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-warning"><i className="fa-solid fa-briefcase"></i></div>
             <h2>Work Information</h2>
           </div>
           <div className="um-field-grid">
@@ -304,12 +304,21 @@ const UserEdit = () => {
 
         {/* Submit */}
         <div className="um-form-actions">
-          <button type="button" onClick={() => navigate(`/dashboard/users/${id}`)} className="um-btn-secondary">
+          <button type="button" onClick={() => navigate(`/dashboard/users/${id}`)} className="ev-btn ev-btn-secondary">
             Cancel
           </button>
-          <button type="submit" className="um-btn-primary" disabled={saving}>
-            {saving ? <><Loader className="w-4 h-4 animate-spin" /> Saving...</>
-              : <><Save className="w-4 h-4" /> Save Changes</>}
+          <button type="submit" className="ev-btn ev-btn-primary" disabled={saving}>
+            {saving ? (
+              <>
+                <i className="fa-solid fa-spinner fa-spin"></i>
+                Saving...
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-floppy-disk"></i>
+                Save Changes
+              </>
+            )}
           </button>
         </div>
       </form>

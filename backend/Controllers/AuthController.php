@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/ActivityLogController.php';
+
 class AuthController {
     
     private $secretKey;
@@ -66,6 +68,8 @@ class AuthController {
                 $signature = hash_hmac('sha256', $base64UrlHeader . "." . $base64UrlPayload, $this->secretKey, true);
                 $base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
                 $jwt = $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
+
+                ActivityLogController::log($user['id'], $user['username'], 'auth.login', 'User logged in');
 
                 echo json_encode([
                     'success' => true,

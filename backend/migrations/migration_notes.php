@@ -22,7 +22,7 @@ try {
     $stmt = $pdo->prepare("SELECT id FROM menus WHERE path = '/dashboard/notes'");
     $stmt->execute();
     if (!$stmt->fetch()) {
-        $pdo->exec("INSERT INTO menus (name, path, icon, permission_key) VALUES ('Notlar', '/dashboard/notes', 'file-text', NULL)");
+        $pdo->exec("INSERT INTO menus (name, path, icon, permission_key) VALUES ('Notlar', '/dashboard/notes', 'StickyNote', NULL)");
         $menu_id = $pdo->lastInsertId();
         
         // Add to roles (Assume 1=Admin, 2=User)

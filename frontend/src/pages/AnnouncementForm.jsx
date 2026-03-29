@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Megaphone, ArrowLeft, Save, Loader, AlertCircle } from 'lucide-react';
+// Lucide imports removed
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
@@ -74,7 +74,7 @@ const AnnouncementForm = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader className="w-8 h-8 animate-spin text-primary" />
+        <i className="fa-solid fa-spinner fa-spin w-8 h-8 text-primary"></i>
       </div>
     );
   }
@@ -83,12 +83,12 @@ const AnnouncementForm = () => {
     <div className="flex flex-col gap-6 pb-12 animate-in max-w-4xl mx-auto w-full">
       {/* Header */}
       <header className="flex items-center gap-4">
-        <button onClick={() => navigate('/dashboard/announcements')} className="um-back-btn">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        <div onClick={() => navigate('/dashboard/announcements')} className="ev-btn ev-btn-icon ev-btn-secondary" style={{ cursor: 'pointer', borderRadius: '50%' }}>
+          <i className="fa-solid fa-arrow-left"></i>
+        </div>
         <div className="flex items-center gap-3">
-          <div className="icon-box purple">
-            <Megaphone className="w-6 h-6" />
+          <div className="ev-icon ev-icon-purple ev-icon-lg">
+            <i className="fa-solid fa-bullhorn"></i>
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gradient">
@@ -103,7 +103,7 @@ const AnnouncementForm = () => {
 
       {error && (
         <div className="um-alert-error animate-in">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <i className="fa-solid fa-circle-exclamation w-5 h-5 flex-shrink-0"></i>
           <span>{error}</span>
         </div>
       )}
@@ -218,11 +218,15 @@ const AnnouncementForm = () => {
 
         {/* Actions */}
         <div className="flex items-center justify-between">
-          <button type="button" onClick={() => navigate('/dashboard/announcements')} className="um-btn-secondary">
+          <button type="button" onClick={() => navigate('/dashboard/announcements')} className="ev-btn ev-btn-secondary">
             İptal
           </button>
-          <button type="submit" className="um-btn-primary flex items-center gap-2" disabled={saving}>
-            {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          <button type="submit" className="ev-btn ev-btn-primary" disabled={saving}>
+            {saving ? (
+              <i className="fa-solid fa-spinner fa-spin"></i>
+            ) : (
+              <i className="fa-solid fa-floppy-disk"></i>
+            )}
             {isEdit ? 'Değişiklikleri Kaydet' : 'Duyuruyu Yayınla'}
           </button>
         </div>

@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { 
-  DatabaseZap, Loader, Sparkles, CheckCircle2, 
-  Download, Moon, Sun, Server, ShieldCheck, AlertCircle 
-} from 'lucide-react';
+// Lucide imports removed
 
 const Settings = () => {
   const [loadingOpt, setLoadingOpt] = useState(false);
@@ -13,6 +10,12 @@ const Settings = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [config, setConfig] = useState({ theme: 'light' });
   const [dbInfo, setDbInfo] = useState(null);
+
+  // Activity Logs state
+  const [logs, setLogs] = useState([]);
+  const [logPagination, setLogPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
+  const [logSearch, setLogSearch] = useState('');
+  const [loadingLogs, setLoadingLogs] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -26,8 +29,24 @@ const Settings = () => {
     if (isAdmin) {
       fetchConfig();
       fetchDbInfo();
+      fetchLogs(1);
     }
   }, [isAdmin]);
+
+  const fetchLogs = async (pageToFetch = logPagination.page) => {
+    setLoadingLogs(true);
+    try {
+      const res = await axios.get('/api/activity-logs', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        params: { page: pageToFetch, limit: logPagination.limit, search: logSearch }
+      });
+      if (res.data.logs) {
+        setLogs(res.data.logs);
+        setLogPagination(res.data.pagination);
+      }
+    } catch(err) { /* ignore */ }
+    setLoadingLogs(false);
+  };
 
   const fetchConfig = async () => {
     try {
@@ -123,7 +142,7 @@ const Settings = () => {
   if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center py-20 animate-in">
-        <ShieldCheck className="w-16 h-16 text-warning mb-4 opacity-50" />
+        <i className="fa-solid fa-shield-halved text-warning text-6xl mb-4 opacity-50"></i>
         <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
         <p className="text-muted">You do not have permission to view system settings.</p>
       </div>
@@ -141,7 +160,7 @@ const Settings = () => {
 
       {msg && (
         <div className={`um-alert-${msg.isError ? 'error' : 'success'} animate-in`}>
-          {msg.isError ? <AlertCircle className="w-5 h-5 flex-shrink-0" /> : <CheckCircle2 className="w-5 h-5 flex-shrink-0" />}
+          {msg.isError ? <i className="fa-solid fa-circle-exclamation w-5 h-5 flex-shrink-0"></i> : <i className="fa-solid fa-circle-check w-5 h-5 flex-shrink-0"></i>}
           <span>{msg.text}</span>
         </div>
       )}
@@ -151,7 +170,7 @@ const Settings = () => {
         {/* Database Connection Info */}
         <div className="premium-card flex flex-col delay-2">
           <div className="um-section-header">
-            <div className="icon-box warning"><Server className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-warning"><i className="fa-solid fa-server"></i></div>
             <h2>SQL Connection Info</h2>
           </div>
           {dbInfo ? (
@@ -188,23 +207,23 @@ const Settings = () => {
             <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[hsla(150,80%,40%,0.1)] rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
             <div className="relative z-10 flex flex-col gap-4">
               <div className="flex items-center gap-3 mb-2">
-                <div className="icon-box success"><DatabaseZap className="w-5 h-5" /></div>
+                <div className="ev-icon ev-icon-success"><i className="fa-solid fa-database"></i></div>
                 <h2 className="text-xl font-bold">Optimization</h2>
               </div>
               <p className="text-muted text-sm leading-relaxed max-w-sm">
                 Analyze table fragmentation and reclaim unused disk space, improving query performance.
               </p>
-              <div className="inline-flex max-w-fit mt-2 items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--glass-border)] bg-[var(--bg-surface)] text-[var(--success)] text-xs font-bold shadow-sm backdrop-blur-md">
-                <Sparkles className="w-3 h-3" /> Recommended weekly
+               <div className="inline-flex max-w-fit mt-2 items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--glass-border)] bg-[var(--bg-surface)] text-[var(--success)] text-xs font-bold shadow-sm backdrop-blur-md">
+                <i className="fa-solid fa-wand-magic-sparkles text-[10px]"></i> Recommended weekly
               </div>
             </div>
           </div>
           <div className="p-6 border-t border-[var(--glass-border)] bg-[hsla(0,0%,0%,0.2)]">
             <button 
               onClick={optimizeDb} disabled={loadingOpt}
-              className="um-btn-primary w-full !bg-[var(--success)] !from-[var(--success)] !to-[hsl(150,80%,30%)] !shadow-[0_4px_15px_hsla(150,80%,40%,0.3)]"
+              className="ev-btn ev-btn-success ev-btn-block"
             >
-              {loadingOpt ? <><Loader className="w-4 h-4 animate-spin"/> Optimizing...</> : <><DatabaseZap className="w-4 h-4"/> Run Manual Optimization</>}
+              {loadingOpt ? <><i className="fa-solid fa-spinner fa-spin w-4 h-4 mr-2"></i> Optimizing...</> : <><i className="fa-solid fa-bolt w-4 h-4 mr-2"></i> Run Manual Optimization</>}
             </button>
           </div>
         </div>
@@ -215,7 +234,7 @@ const Settings = () => {
             <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[hsla(220,80%,50%,0.15)] rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
             <div className="relative z-10 flex flex-col gap-4">
               <div className="flex items-center gap-3 mb-2">
-                <div className="icon-box"><Download className="w-5 h-5" /></div>
+                <div className="ev-icon ev-icon-primary"><i className="fa-solid fa-download"></i></div>
                 <h2 className="text-xl font-bold">Export Backup</h2>
               </div>
               <p className="text-muted text-sm leading-relaxed max-w-sm">
@@ -226,14 +245,104 @@ const Settings = () => {
           <div className="p-6 border-t border-[var(--glass-border)] bg-[hsla(0,0%,0%,0.2)]">
             <button 
               onClick={exportDb} disabled={loadingExport}
-              className="um-btn-primary w-full"
+              className="ev-btn ev-btn-primary ev-btn-block"
             >
-              {loadingExport ? <><Loader className="w-4 h-4 animate-spin"/> Exporting...</> : <><Download className="w-4 h-4"/> Download Full Database Backup</>}
+              {loadingExport ? <><i className="fa-solid fa-spinner fa-spin w-4 h-4 mr-2"></i> Exporting...</> : <><i className="fa-solid fa-download w-4 h-4 mr-2"></i> Download Full Database Backup</>}
             </button>
           </div>
         </div>
 
       </div>
+
+      {/* Activity Logs (Admin Only) */}
+      <div className="premium-card p-0 flex flex-col delay-[500ms] w-full mt-2">
+        <div className="p-6 border-b border-[var(--glass-border)] flex flex-col sm:flex-row items-start sm:items-center justify-between bg-[var(--bg-surface)] gap-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <div className="ev-icon ev-icon-sm ev-icon-purple"><i className="fa-solid fa-list-ul"></i></div>
+            Activity Logs
+          </h2>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <div className="um-search-box flex-1 sm:w-64">
+              <i className="fa-solid fa-magnifying-glass text-muted"></i>
+              <input
+                type="text"
+                placeholder="Search logs..."
+                value={logSearch}
+                onChange={e => setLogSearch(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && fetchLogs(1)}
+                className="um-search-input"
+              />
+            </div>
+            <button onClick={() => fetchLogs(1)} className="ev-btn ev-btn-secondary" style={{ cursor: 'pointer' }}>
+              Search
+            </button>
+          </div>
+        </div>
+        
+        <div className="overflow-x-auto w-full">
+          {loadingLogs ? (
+            <div className="p-8 text-center text-muted"><i className="fa-solid fa-spinner fa-spin mr-2"></i> Loading logs...</div>
+          ) : logs.length === 0 ? (
+            <div className="p-8 text-center text-muted">No activity logs found.</div>
+          ) : (
+            <table className="um-table w-full">
+              <thead>
+                <tr>
+                  <th className="whitespace-nowrap">Date</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Description</th>
+                  <th>IP Address</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id}>
+                    <td className="whitespace-nowrap text-sm text-muted">
+                      {new Date(log.created_at).toLocaleString('tr-TR')}
+                    </td>
+                    <td className="font-medium text-[var(--text-main)]">
+                      {log.username || 'System'}
+                      {log.user_id && <span className="text-muted text-xs ml-1">(#{log.user_id})</span>}
+                    </td>
+                    <td><span className="badge">{log.action}</span></td>
+                    <td className="text-sm">{log.description}</td>
+                    <td className="text-sm font-mono text-muted">{log.ip_address}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {logPagination.totalPages > 1 && (
+          <div className="p-4 border-t border-[var(--glass-border)] flex items-center justify-between bg-[hsla(0,0%,0%,0.2)]">
+            <div className="text-sm text-muted">
+              Page {logPagination.page} of {logPagination.totalPages} ({logPagination.total} total)
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => fetchLogs(logPagination.page - 1)}
+                disabled={logPagination.page === 1 || loadingLogs}
+                className="ev-btn ev-btn-secondary ev-btn-sm"
+                style={{ cursor: logPagination.page === 1 ? 'not-allowed' : 'pointer' }}
+              >
+                Previous
+              </button>
+              <button 
+                onClick={() => fetchLogs(logPagination.page + 1)}
+                disabled={logPagination.page >= logPagination.totalPages || loadingLogs}
+                className="ev-btn ev-btn-secondary ev-btn-sm"
+                style={{ cursor: logPagination.page >= logPagination.totalPages ? 'not-allowed' : 'pointer' }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 };

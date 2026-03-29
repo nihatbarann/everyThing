@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Menu, Sun, Moon } from 'lucide-react';
+// Lucide imports removed
 import Sidebar from '../components/Sidebar';
 
 const DashboardLayout = () => {
@@ -68,7 +68,7 @@ const DashboardLayout = () => {
       {/* Theme Toggle Button */}
       <button 
         onClick={toggleTheme}
-        className="p-2.5 rounded-full shadow-xl hover:scale-110 transition-transform flex items-center justify-center"
+        className="ev-btn ev-btn-icon ev-btn-ghost"
         style={{ 
           position: 'fixed', 
           top: '16px', 
@@ -78,12 +78,15 @@ const DashboardLayout = () => {
           border: isDark ? '1px solid rgba(255,255,255,0.14)' : '1px solid rgba(0,0,0,0.12)',
           color: isDark ? '#fff' : '#1e293b',
           backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)'
+          WebkitBackdropFilter: 'blur(12px)',
+          borderRadius: '50%',
+          width: '40px',
+          height: '40px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
         }}
         title={isDark ? "Koyu Tema (Dark)" : "Açık Tema (Light)"}
       >
-        {isDark ? <Moon className="w-5 h-5" style={{color:'#6366f1'}} /> : <Sun className="w-5 h-5 text-yellow-500" />}
-
+        {isDark ? <i className="fa-solid fa-moon" style={{color:'#6366f1'}}></i> : <i className="fa-solid fa-sun" style={{color:'#f59e0b'}}></i>}
       </button>
 
       {/* Main content column */}
@@ -97,7 +100,7 @@ const DashboardLayout = () => {
             onClick={() => setSidebarOpen(prev => !prev)}
             aria-label="Toggle navigation"
           >
-            <Menu size={20} />
+            <i className="fa-solid fa-bars"></i>
           </button>
         </div>
 

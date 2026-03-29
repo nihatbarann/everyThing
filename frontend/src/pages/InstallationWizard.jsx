@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Database, Server, KeyRound, ArrowRight, Loader, CheckCircle2, AlertCircle } from 'lucide-react';
+// Lucide imports removed
 
 const InstallationWizard = ({ onInstallSuccess }) => {
   const [formData, setFormData] = useState({
@@ -64,7 +64,7 @@ const InstallationWizard = ({ onInstallSuccess }) => {
             <div className="relative">
               <div className="absolute inset-0 bg-blue-500 blur-xl opacity-40 rounded-full animate-pulse"></div>
               <div className="p-4 bg-slate-800/80 rounded-2xl border border-slate-700/50 relative z-10 shadow-xl">
-                <Database className="w-10 h-10 text-blue-400" />
+                <i className="fa-solid fa-database w-10 h-10 text-blue-400 flex items-center justify-center"></i>
               </div>
             </div>
           </div>
@@ -75,14 +75,14 @@ const InstallationWizard = ({ onInstallSuccess }) => {
         <div className="animate-fade-in stagger-2 opacity-0">
           {error && (
             <div className="alert alert-error">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <i className="fa-solid fa-circle-exclamation w-5 h-5 flex-shrink-0"></i>
               <span>{error}</span>
             </div>
           )}
 
           {testSuccess && (
             <div className="alert alert-success">
-              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+              <i className="fa-solid fa-circle-check w-5 h-5 flex-shrink-0"></i>
               <span>{testSuccess}</span>
             </div>
           )}
@@ -90,7 +90,7 @@ const InstallationWizard = ({ onInstallSuccess }) => {
           <form onSubmit={handleInstall} className="space-y-4">
             <div className="two-cols">
               <div className="form-group mb-0">
-                <label><Server className="w-4 h-4 inline mr-1 align-text-bottom"/> Host</label>
+                <label><i className="fa-solid fa-server w-4 h-4 inline mr-1 align-text-bottom"></i> Host</label>
                 <input type="text" name="db_host" value={formData.db_host} onChange={handleChange} required />
               </div>
               <div className="form-group mb-0">
@@ -110,7 +110,7 @@ const InstallationWizard = ({ onInstallSuccess }) => {
                 <input type="text" name="db_user" value={formData.db_user} onChange={handleChange} required />
               </div>
               <div className="form-group mb-0">
-                <label><KeyRound className="w-4 h-4 inline mr-1 align-text-bottom"/> Password</label>
+                <label><i className="fa-solid fa-key w-4 h-4 inline mr-1 align-text-bottom"></i> Password</label>
                 <input type="password" name="db_password" value={formData.db_password} onChange={handleChange} />
               </div>
             </div>
@@ -122,11 +122,11 @@ const InstallationWizard = ({ onInstallSuccess }) => {
                 onClick={handleTestConnection} 
                 disabled={testing || loading}
               >
-                {testing ? <Loader className="w-5 h-5 animate-spin" /> : 'Test Context'}
+                {testing ? <i className="fa-solid fa-spinner fa-spin w-5 h-5"></i> : 'Test Context'}
               </button>
               <button type="submit" className="btn w-1/2" disabled={loading || testing}>
-                {loading ? <Loader className="w-5 h-5 animate-spin" /> : (
-                  <>Install <ArrowRight className="w-4 h-4" /></>
+                {loading ? <i className="fa-solid fa-spinner fa-spin w-5 h-5"></i> : (
+                  <>Install <i className="fa-solid fa-arrow-right w-4 h-4 ml-1"></i></>
                 )}
               </button>
             </div>

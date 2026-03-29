@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../Core/AuthMiddleware.php';
+require_once __DIR__ . '/ActivityLogController.php';
 
 class UserController {
 
@@ -192,6 +193,8 @@ class UserController {
             $stmt->execute($values);
 
             $newId = $pdo->lastInsertId();
+            ActivityLogController::log($user['user_id'], $user['username'], 'user.create', "Created user {$username}", 'user', $newId);
+
             echo json_encode(['success' => true, 'user_id' => $newId, 'message' => 'User created successfully']);
 
         } catch (Exception $e) {
@@ -268,6 +271,8 @@ class UserController {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
 
+            ActivityLogController::log($user['user_id'], $user['username'], 'user.update', "Updated user ID {$id}", 'user', $id);
+
             echo json_encode(['success' => true, 'message' => 'User updated successfully']);
 
         } catch (Exception $e) {
@@ -305,6 +310,8 @@ class UserController {
             $stmt = $pdo->prepare("SELECT is_active FROM users WHERE id = ?");
             $stmt->execute([$id]);
             $newStatus = $stmt->fetchColumn();
+
+            ActivityLogController::log($user['user_id'], $user['username'], 'user.toggle_status', ($newStatus ? 'Activated' : 'Deactivated') . " user ID {$id}", 'user', $id);
 
             echo json_encode([
                 'success' => true,
@@ -345,6 +352,8 @@ class UserController {
             $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ? AND deleted_at IS NULL");
             $stmt->execute([$passwordHash, $id]);
 
+            ActivityLogController::log($user['user_id'], $user['username'], 'user.reset_password', "Reset password for user ID {$id}", 'user', $id);
+
             echo json_encode(['success' => true, 'message' => 'Password reset successfully']);
 
         } catch (Exception $e) {
@@ -384,6 +393,8 @@ class UserController {
                 echo json_encode(['error' => 'User not found']);
                 return;
             }
+
+            ActivityLogController::log($user['user_id'], $user['username'], 'user.delete', "Deleted user ID {$id}", 'user', $id);
 
             echo json_encode(['success' => true, 'message' => 'User deleted successfully']);
 

@@ -19,6 +19,16 @@ import LinksDashboard from './pages/LinksDashboard';
 import Announcements from './pages/Announcements';
 import AnnouncementView from './pages/AnnouncementView';
 import AnnouncementForm from './pages/AnnouncementForm';
+import ToolsDashboard from './pages/tools/ToolsDashboard';
+import ToolImageResize from './pages/tools/ToolImageResize';
+import ToolImageFormat from './pages/tools/ToolImageFormat';
+import ToolImageCompress from './pages/tools/ToolImageCompress';
+import ToolQrGenerate from './pages/tools/ToolQrGenerate';
+import ToolQrScan from './pages/tools/ToolQrScan';
+import ToolImagesToPdf from './pages/tools/ToolImagesToPdf';
+import ToolExcelToPdf from './pages/tools/ToolExcelToPdf';
+import ToolWordToPdf from './pages/tools/ToolWordToPdf';
+import ToolPdfToWord from './pages/tools/ToolPdfToWord';
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
@@ -65,7 +75,7 @@ function App() {
       })
 
       .catch(err => {
-        console.error("Failed to check installation status", err);
+
         setIsInstalled(false);
       });
   }, []);
@@ -102,6 +112,16 @@ function App() {
               <Route path="announcements/create" element={<ErrorBoundary><AnnouncementForm /></ErrorBoundary>} />
               <Route path="announcements/:id" element={<ErrorBoundary><AnnouncementView /></ErrorBoundary>} />
               <Route path="announcements/:id/edit" element={<ErrorBoundary><AnnouncementForm /></ErrorBoundary>} />
+              <Route path="tools" element={<ErrorBoundary><ToolsDashboard /></ErrorBoundary>} />
+              <Route path="tools/resize" element={<ErrorBoundary><ToolImageResize /></ErrorBoundary>} />
+              <Route path="tools/format" element={<ErrorBoundary><ToolImageFormat /></ErrorBoundary>} />
+              <Route path="tools/compress" element={<ErrorBoundary><ToolImageCompress /></ErrorBoundary>} />
+              <Route path="tools/qr-generate" element={<ErrorBoundary><ToolQrGenerate /></ErrorBoundary>} />
+              <Route path="tools/qr-scan" element={<ErrorBoundary><ToolQrScan /></ErrorBoundary>} />
+              <Route path="tools/images-to-pdf" element={<ErrorBoundary><ToolImagesToPdf /></ErrorBoundary>} />
+              <Route path="tools/excel-to-pdf" element={<ErrorBoundary><ToolExcelToPdf /></ErrorBoundary>} />
+              <Route path="tools/word-to-pdf" element={<ErrorBoundary><ToolWordToPdf /></ErrorBoundary>} />
+              <Route path="tools/pdf-to-word" element={<ErrorBoundary><ToolPdfToWord /></ErrorBoundary>} />
             </Route>
             {/* Redirect root to login */}
             <Route path="/" element={<Navigate to="/login" replace />} />

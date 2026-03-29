@@ -1,34 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Activity, Users, Database, Zap, ArrowUpRight, ArrowDownRight, Clock, ShieldCheck, Megaphone, Calendar, User as UserIcon, X, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-
-const StatCard = ({ title, value, trend, trendValue, icon: Icon, colorClass, delay }) => {
-  const isPositive = trend === 'up';
-  return (
-    <div className={`premium-card animate-in ${delay}`}>
-      <div className="flex justify-between items-start mb-4">
-        <div className={`icon-box ${colorClass}`}>
-          <Icon className="w-6 h-6" />
-        </div>
-        <div className={`badge ${isPositive ? 'positive' : 'negative'}`}>
-          {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-          {trendValue}
-        </div>
-      </div>
-      <div>
-        <h3 className="stat-value">{value}</h3>
-        <p className="stat-label">{title}</p>
-      </div>
-    </div>
-  );
-};
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  
+  // Calendar states
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [events, setEvents] = useState([]);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [newEvent, setNewEvent] = useState({ title: '', time: '', color: '#3b82f6', is_done: 0 });
+  const [editingEventId, setEditingEventId] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -39,7 +25,135 @@ const Dashboard = () => {
       } catch(e){}
     }
     fetchLatestAnnouncements();
+    fetchEvents(new Date());
   }, []);
+
+  const fetchEvents = async (date) => {
+    try {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const res = await axios.get(`/api/calendar?month=${year}-${month}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.data.events) {
+        setEvents(res.data.events);
+      }
+    } catch (err) {
+
+    }
+  };
+
+  const handleDayClick = (value) => {
+    setSelectedDate(value);
+  };
+  
+  const handleActiveStartDateChange = ({ activeStartDate }) => {
+    setCurrentDate(activeStartDate);
+    fetchEvents(activeStartDate);
+  };
+
+  const handleSaveEvent = async (e) => {
+    e.preventDefault();
+    if (!selectedDate) return;
+
+    try {
+      const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+      const payload = {
+        event_date: dateStr,
+        event_time: newEvent.time,
+        title: newEvent.title,
+        color: newEvent.color,
+        is_done: newEvent.is_done ? 1 : 0
+      };
+      
+      let res;
+      if (editingEventId) {
+        res = await axios.put(`/api/calendar/${editingEventId}`, payload, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+      } else {
+        res = await axios.post('/api/calendar', payload, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+      }
+      
+      if (res.data.success) {
+        setShowEventModal(false);
+        setNewEvent({ title: '', time: '', color: '#3b82f6', is_done: 0 });
+        setEditingEventId(null);
+        fetchEvents(currentDate);
+      }
+    } catch (err) {
+
+      alert('Event kaydetme başarısız oldu.');
+    }
+  };
+
+  const handleToggleDone = async (e, evt) => {
+    e.stopPropagation();
+    try {
+      const payload = {
+        title: evt.title,
+        color: evt.color,
+        event_date: evt.event_date,
+        event_time: evt.event_time,
+        is_done: evt.is_done ? 0 : 1
+      };
+      await axios.put(`/api/calendar/${evt.id}`, payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      fetchEvents(currentDate);
+    } catch (err) {
+
+    }
+  };
+
+  const handleEditEventClick = (e, evt) => {
+    e.stopPropagation();
+    setNewEvent({ 
+      title: evt.title, 
+      time: evt.event_time || '', 
+      color: evt.color,
+      is_done: evt.is_done 
+    });
+    setEditingEventId(evt.id);
+    setShowEventModal(true);
+  };
+
+  const handleDeleteEvent = async (e, id) => {
+    e.stopPropagation();
+    if(!window.confirm('Bu notu silmek istediğinize emin misiniz?')) return;
+    
+    try {
+      await axios.delete(`/api/calendar/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      fetchEvents(currentDate);
+    } catch (err) {
+
+    }
+  };
+
+  // Helper for custom tile content (event dots)
+  const tileContent = ({ date, view }) => {
+    if (view === 'month') {
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const dayEvents = events.filter(e => e.event_date === dateStr);
+      
+      if (dayEvents.length > 0) {
+        return (
+          <div className="react-calendar__tile-dots">
+            {dayEvents.slice(0, 3).map((e, i) => (
+              <div key={i} className="react-calendar__tile-dot" style={{ backgroundColor: e.color }} />
+            ))}
+          </div>
+        );
+      }
+    }
+    return null;
+  };
+
+  const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 
   const fetchLatestAnnouncements = async () => {
     try {
@@ -50,30 +164,15 @@ const Dashboard = () => {
         setAnnouncements(res.data.announcements);
       }
     } catch (err) {
-      console.error('Failed to fetch announcements:', err);
-    }
-  };
 
-  const openAnnouncement = async (ann) => {
-    setSelectedAnnouncement(ann);
-    try {
-      // Fetch full details to increment view count
-      const res = await axios.get(`/api/announcements/${ann.id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      if (res.data.success) {
-        setSelectedAnnouncement(res.data.announcement);
-      }
-    } catch (err) {
-      console.error('Failed to fetch full announcement', err);
     }
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'high': return 'text-red-500 bg-red-500/10 border-red-500/20';
-      case 'medium': return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
-      default: return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
+      case 'high': return 'ev-priority-high';
+      case 'medium': return 'ev-priority-medium';
+      default: return 'ev-priority-low';
     }
   };
 
@@ -92,99 +191,65 @@ const Dashboard = () => {
         <div>
           <h1 className="text-4xl mb-2 text-gradient">Dashboard Overview</h1>
           <p className="text-muted text-lg">
-            Welcome back, <span className="text-[var(--text-main)] font-bold">{user?.username || 'Admin'}</span>.
+            Welcome back, <span style={{ color: 'var(--text-main)', fontWeight: 700 }}>{user?.username || 'Admin'}</span>.
           </p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-hover)] rounded-lg border border-[var(--border-color)] text-sm font-medium text-[var(--text-muted)] shadow-sm backdrop-blur-md">
-          <Clock className="w-4 h-4 text-blue-400" />
+        <div className="ev-btn ev-btn-ghost" style={{ cursor: 'default' }}>
+          <i className="fa-regular fa-clock" style={{ color: 'var(--info)' }}></i>
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </div>
       </header>
 
-      {/* Grid Stats */}
-      <div className="grid-auto-fit">
-        <StatCard 
-          title="Total Users" 
-          value="1,248" 
-          trend="up" 
-          trendValue="12%" 
-          icon={Users} 
-          colorClass="" 
-          delay="delay-1" 
-        />
-        <StatCard 
-          title="Active Sessions" 
-          value="42" 
-          trend="up" 
-          trendValue="5%" 
-          icon={Activity} 
-          colorClass="success" 
-          delay="delay-2" 
-        />
-        <StatCard 
-          title="System Load" 
-          value="12%" 
-          trend="down" 
-          trendValue="2%" 
-          icon={Zap} 
-          colorClass="warning" 
-          delay="delay-3" 
-        />
-        <StatCard 
-          title="Database Health" 
-          value="99.9%" 
-          trend="up" 
-          trendValue="Optimal" 
-          icon={Database} 
-          colorClass="purple" 
-          delay="[animation-delay:400ms]" 
-        />
-      </div>
-
-      <div className="grid-container grid-cols-1 lg:grid-cols-3">
-        {/* Son Duyurular (Latest Announcements) */}
-        <div className="premium-card flex flex-col p-0 animate-in delay-2 lg:col-span-2">
-          <div className="p-6 border-b border-[var(--border-color)] bg-[hsla(0,0%,0%,0.2)] flex items-center justify-between">
+      {/* Dashboard Content - 50/50 Split Grid */}
+      <div className="dashboard-split">
+        
+        {/* Sol Taraf - Duyurular (50%) */}
+        <div className="premium-card flex flex-col animate-in delay-1" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', background: 'hsla(0,0%,0%,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div className="flex items-center gap-3">
-              <div className="icon-box purple"><Megaphone className="w-5 h-5" /></div>
-              <h2 className="text-xl font-bold">Son Duyurular</h2>
+              <div className="ev-icon ev-icon-purple"><i className="fa-solid fa-bullhorn"></i></div>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 700 }}>Son Duyurular</h2>
             </div>
-            <Link to="/dashboard/announcements" className="um-btn-secondary text-sm py-1.5 px-3">Tümünü Gör</Link>
+            <Link to="/dashboard/announcements" className="ev-btn ev-btn-secondary ev-btn-sm">
+              Tümünü Gör
+              <i className="fa-solid fa-arrow-right"></i>
+            </Link>
           </div>
-          <div className="p-0 flex-1 overflow-auto">
+          <div style={{ padding: '1.25rem', flex: 1, overflowY: 'auto' }}>
             {announcements.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 flex flex-col items-center">
-                <Megaphone className="w-12 h-12 mb-3 opacity-20" />
+              <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                <i className="fa-solid fa-bullhorn" style={{ fontSize: '2.5rem', marginBottom: '0.75rem', opacity: 0.2 }}></i>
                 <p>Henüz yayınlanmış bir duyuru bulunmuyor.</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-800/50">
+              <div className="flex flex-col gap-4">
                 {announcements.map((ann) => (
                   <div 
                     key={ann.id} 
-                    className="p-5 hover:bg-[var(--bg-hover)] transition-colors cursor-pointer group flex flex-col sm:flex-row sm:items-start gap-4"
-                    onClick={() => openAnnouncement(ann)}
+                    className="premium-card"
+                    style={{ padding: '1.25rem', cursor: 'pointer' }}
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-bold text-[var(--text-main)] group-hover:text-primary transition-colors">
-                          {ann.title}
-                        </h3>
-                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${getPriorityColor(ann.priority)}`}>
-                          {getPriorityLabel(ann.priority)}
-                        </span>
+                    <div className="flex items-start justify-between gap-4" style={{ marginBottom: '0.75rem' }}>
+                      <h3 style={{ fontSize: '1.05rem', fontWeight: 700, lineHeight: 1.4 }}>
+                        {ann.title}
+                      </h3>
+                      <span className={`shrink-0 whitespace-nowrap ${getPriorityColor(ann.priority)}`} style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '999px', border: '1px solid' }}>
+                        {getPriorityLabel(ann.priority)}
+                      </span>
+                    </div>
+                    
+                    <p className="text-muted" style={{ fontSize: '0.875rem', lineHeight: 1.6, marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {ann.short_description}
+                    </p>
+                    
+                    <div className="flex items-center gap-4" style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-subtle)', marginTop: 'auto', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' }}>
+                      <div className="flex items-center gap-1">
+                        <i className="fa-solid fa-user" style={{ fontSize: '10px', color: 'var(--primary)' }}></i>
+                        {ann.created_by_name}
                       </div>
-                      <p className="text-sm text-[var(--text-muted)] line-clamp-2 mb-3">{ann.short_description}</p>
-                      
-                      <div className="flex items-center gap-4 text-xs text-[var(--text-subtle)]">
-                        <div className="flex items-center gap-1.5">
-                          <UserIcon className="w-3.5 h-3.5" />
-                          {ann.created_by_name}
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {new Date(ann.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </div>
+                      <div className="flex items-center gap-1">
+                        <i className="fa-regular fa-calendar" style={{ fontSize: '11px', color: 'var(--primary)' }}></i>
+                        {new Date(ann.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </div>
                     </div>
                   </div>
@@ -194,78 +259,191 @@ const Dashboard = () => {
           </div>
         </div>
         
-        {/* Recent Actions Timeline */}
-        <div className="premium-card flex flex-col p-0 animate-in delay-3">
-          <div className="p-6 border-b border-[var(--border-color)] bg-[hsla(0,0%,0%,0.2)]">
-            <h2 className="text-lg font-bold">Activity Feed</h2>
+        {/* Sağ Taraf - Takvim Widget (50%) */}
+        <div className="animate-in delay-2 flex flex-col gap-4">
+          
+          {/* Calendar Card */}
+          <div className="premium-card um-custom-calendar-wrapper" style={{ padding: '1rem', overflow: 'hidden', flexShrink: 0, borderRadius: 'var(--radius-xl)' }}>
+            <div className="flex items-center gap-2" style={{ marginBottom: '0.5rem', fontWeight: 700, padding: '0 0.5rem' }}>
+              <i className="fa-regular fa-calendar" style={{ color: 'var(--primary)' }}></i> 
+              Takvim
+            </div>
+            <Calendar 
+              onChange={handleDayClick} 
+              value={selectedDate}
+              onActiveStartDateChange={handleActiveStartDateChange}
+              tileContent={tileContent}
+              next2Label={null}
+              prev2Label={null}
+              locale="tr-TR"
+            />
           </div>
-          <div className="p-6 flex-1 overflow-auto">
-            <div className="activity-list">
-              {[
-                { title: 'System Optimized', time: '10 mins ago', desc: 'Auto-script completed' },
-                { title: 'New Employee', time: '1 hour ago', desc: 'User johndoe logged in' },
-                { title: 'Daily Backup', time: '3 hours ago', desc: 'DB snapshot saved' },
-                { title: 'Role Updated', time: '5 hours ago', desc: 'Admin modified permissions' }
-              ].map((item, i) => (
-                <div key={i} className="activity-item">
-                  <div className="w-8 h-8 rounded-full bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-center flex-shrink-0 text-[var(--text-muted)]">
-                    <ShieldCheck className="w-4 h-4" />
+
+          {/* Selected Day Events */}
+          <div className="premium-card flex flex-col" style={{ padding: 0, overflow: 'hidden', flex: 1, borderRadius: 'var(--radius-xl)' }}>
+            <div style={{ padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', flexShrink: 0 }}>
+              <h3 style={{ fontSize: '0.85rem', fontWeight: 700 }}>
+                {selectedDate ? (
+                  selectedDate.toDateString() === new Date().toDateString() 
+                    ? 'Bugünün Planları' 
+                    : `${selectedDate.getDate()} ${monthNames[selectedDate.getMonth()]} Planları`
+                ) : (
+                  'Planlar'
+                )}
+              </h3>
+              {selectedDate && (
+                <button 
+                  onClick={() => {
+                    setNewEvent({ title: '', time: '', color: '#3b82f6', is_done: 0 });
+                    setEditingEventId(null);
+                    setShowEventModal(true);
+                  }}
+                  className="ev-icon ev-icon-sm ev-icon-action"
+                  title="Not Ekle"
+                >
+                  <i className="fa-solid fa-plus"></i>
+                </button>
+              )}
+            </div>
+
+            <div style={{ padding: '1rem', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {(() => {
+                if (!selectedDate) {
+                  return (
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
+                       <span className="text-muted" style={{ fontSize: '0.875rem', fontWeight: 500 }}>Gün seçin</span>
+                    </div>
+                  );
+                }
+
+                const selStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+                const selectedEvents = events.filter(e => e.event_date === selStr);
+                
+                if (selectedEvents.length === 0) {
+                  return (
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.5, padding: '1rem' }}>
+                      <span className="text-muted" style={{ fontSize: '0.875rem', fontWeight: 500 }}>Plan yok</span>
+                    </div>
+                  );
+                }
+                
+                return selectedEvents.map(evt => (
+                  <div 
+                    key={evt.id} 
+                    className="group"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.625rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-hover)', transition: 'background 0.18s' }}
+                  >
+                    <div className="flex items-center gap-3 overflow-hidden" style={{ opacity: evt.is_done ? 0.6 : 1 }}>
+                      <div style={{ width: '10px', height: '10px', borderRadius: '4px', flexShrink: 0, backgroundColor: evt.color }}></div>
+                      <div className="flex flex-col">
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: evt.is_done ? 'line-through' : 'none' }} title={evt.title}>
+                          {evt.title}
+                        </span>
+                        {evt.event_time && (
+                          <span className="text-muted" style={{ fontSize: '10px', fontWeight: 500, marginTop: '2px', display: 'flex', alignItems: 'center', gap: '0.25rem', textDecoration: evt.is_done ? 'line-through' : 'none' }}>
+                            <i className="fa-regular fa-clock"></i>
+                            {evt.event_time.substring(0, 5)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={(e) => handleToggleDone(e, evt)} 
+                        className="ev-icon ev-icon-sm ev-icon-action"
+                        title={evt.is_done ? "Geri Al" : "Yapıldı"}
+                      >
+                        <i className={`fa-solid ${evt.is_done ? 'fa-rotate-left' : 'fa-check'}`} style={{ color: evt.is_done ? 'var(--text-muted)' : 'var(--success)' }}></i>
+                      </button>
+                      <button 
+                        onClick={(e) => handleEditEventClick(e, evt)} 
+                        className="ev-icon ev-icon-sm ev-icon-action"
+                        title="Düzenle"
+                      >
+                        <i className="fa-solid fa-pen" style={{ color: 'var(--primary)' }}></i>
+                      </button>
+                      <button 
+                        onClick={(e) => handleDeleteEvent(e, evt.id)} 
+                        className="ev-icon ev-icon-sm ev-icon-action ev-hover-error"
+                        title="Sil"
+                      >
+                        <i className="fa-solid fa-trash-can"></i>
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-[var(--text-main)]">{item.title}</h4>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">{item.desc}</p>
-                    <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider mt-2 block">{item.time}</span>
-                  </div>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Announcement Detail Modal */}
-      {selectedAnnouncement && createPortal(
-        <div className="um-modal-overlay" onClick={() => setSelectedAnnouncement(null)}>
-          <div className="um-modal max-w-2xl w-full p-0 overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-[var(--border-color)] bg-[var(--bg-surface)] flex justify-between items-start">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                    {selectedAnnouncement.title}
-                  </h2>
-                  <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${getPriorityColor(selectedAnnouncement.priority)}`}>
-                    {getPriorityLabel(selectedAnnouncement.priority)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                  <span className="flex items-center gap-1"><UserIcon className="w-3.5 h-3.5"/> {selectedAnnouncement.created_by_name}</span>
-                  <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5"/> {new Date(selectedAnnouncement.created_at).toLocaleString('tr-TR')}</span>
-                </div>
-              </div>
-              <button onClick={() => setSelectedAnnouncement(null)} className="p-2 text-[var(--text-muted)] hover:text-white hover:bg-[var(--bg-hover)] rounded-lg transition-colors">
-                <X className="w-5 h-5" />
+      {/* Event Add Modal */}
+      {showEventModal && (
+        <div className="um-modal-overlay" onClick={() => setShowEventModal(false)}>
+          <div className="um-modal" style={{ maxWidth: '24rem' }} onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center" style={{ marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <i className="fa-solid fa-calendar-plus" style={{ color: 'var(--primary)' }}></i> 
+                {editingEventId ? 'Notu Düzenle' : 'Not Ekle'}
+              </h2>
+              <button onClick={() => setShowEventModal(false)} className="ev-btn ev-btn-ghost ev-btn-icon ev-btn-sm">
+                <i className="fa-solid fa-xmark"></i>
               </button>
             </div>
             
-            <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-              <div className="text-lg text-[var(--text-main)] font-medium mb-6 pb-6 border-b border-[var(--border-color)] leading-relaxed">
-                {selectedAnnouncement.short_description}
-              </div>
-              <div 
-                className="prose prose-invert prose-blue max-w-none text-[var(--text-main)] leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: selectedAnnouncement.content || selectedAnnouncement.short_description }}
-              />
-            </div>
+            <p className="text-muted" style={{ fontSize: '0.875rem', marginBottom: '1rem' }}>
+              <strong style={{ color: 'var(--text-main)' }}>{selectedDate?.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</strong> tarihi için plan veya not ekleyin.
+            </p>
             
-            <div className="p-4 border-t border-[var(--border-color)] bg-[var(--bg-surface)] flex justify-end">
-              <button onClick={() => setSelectedAnnouncement(null)} className="um-btn-primary py-2 px-6">
-                Kapat
-              </button>
-            </div>
+            <form onSubmit={handleSaveEvent} className="flex flex-col gap-4">
+              <div className="um-field">
+                <label>Not / Plan</label>
+                <input 
+                  type="text" 
+                  autoFocus
+                  required 
+                  value={newEvent.title}
+                  onChange={e => setNewEvent({...newEvent, title: e.target.value})}
+                  placeholder="örn: Müşteri toplantısı, fatura ödemesi..."
+                />
+              </div>
+
+              <div className="um-field">
+                <label>Saat (İsteğe Bağlı)</label>
+                <input 
+                  type="time" 
+                  value={newEvent.time}
+                  onChange={e => setNewEvent({...newEvent, time: e.target.value})}
+                />
+              </div>
+              
+              <div className="um-field">
+                <label>Renk Etiketi</label>
+                <div className="flex gap-3 mt-1">
+                  {['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'].map(color => (
+                    <div 
+                      key={color}
+                      onClick={() => setNewEvent({...newEvent, color})}
+                      style={{ width: '2rem', height: '2rem', borderRadius: '50%', cursor: 'pointer', transition: 'transform 0.18s', backgroundColor: color, transform: newEvent.color === color ? 'scale(1.15)' : 'scale(1)', boxShadow: newEvent.color === color ? `0 0 0 2px var(--bg-surface), 0 0 0 4px ${color}` : 'none' }}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3" style={{ marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setShowEventModal(false)} className="ev-btn ev-btn-secondary">İptal</button>
+                <button type="submit" className="ev-btn ev-btn-primary">
+                  <i className="fa-solid fa-check"></i>
+                  Kaydet
+                </button>
+              </div>
+            </form>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
+
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ArrowLeft, Megaphone, Calendar, User as UserIcon, Eye, Edit2, Trash2, Loader, AlertCircle } from 'lucide-react';
+// Lucide imports removed
 
 const AnnouncementView = () => {
   const navigate = useNavigate();
@@ -70,7 +70,7 @@ const AnnouncementView = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader className="w-8 h-8 animate-spin text-primary" />
+        <i className="fa-solid fa-spinner fa-spin w-8 h-8 text-primary"></i>
       </div>
     );
   }
@@ -78,10 +78,10 @@ const AnnouncementView = () => {
   if (error || !announcement) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <AlertCircle className="w-16 h-16 text-red-400 opacity-50" />
+        <i className="fa-solid fa-circle-exclamation w-16 h-16 text-red-400 opacity-50 flex items-center justify-center"></i>
         <p className="text-slate-400 text-lg">{error || 'Duyuru bulunamadı.'}</p>
-        <button onClick={() => navigate('/dashboard/announcements')} className="um-btn-secondary">
-          <ArrowLeft className="w-4 h-4" /> Geri Dön
+        <button onClick={() => navigate('/dashboard/announcements')} className="ev-btn ev-btn-secondary">
+          <i className="fa-solid fa-arrow-left"></i> Geri Dön
         </button>
       </div>
     );
@@ -91,24 +91,26 @@ const AnnouncementView = () => {
     <div className="flex flex-col gap-6 pb-12 animate-in max-w-4xl mx-auto w-full">
       {/* Header */}
       <header className="flex items-center justify-between gap-4 flex-wrap">
-        <button onClick={() => navigate('/dashboard/announcements')} className="um-back-btn">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        <div onClick={() => navigate('/dashboard/announcements')} className="ev-btn ev-btn-icon ev-btn-secondary" style={{ cursor: 'pointer', borderRadius: '50%' }}>
+          <i className="fa-solid fa-arrow-left"></i>
+      </div>
 
         {isAdmin && (
-          <div className="flex items-center gap-2 ml-auto">
-            <button
+          <div className="flex items-center gap-3 ml-auto">
+            <div
               onClick={() => navigate(`/dashboard/announcements/${id}/edit`)}
-              className="um-btn-secondary flex items-center gap-2"
+              className="ev-btn ev-btn-secondary" style={{ cursor: 'pointer' }}
             >
-              <Edit2 className="w-4 h-4" /> Düzenle
-            </button>
-            <button
+              <i className="fa-solid fa-pen-to-square"></i>
+              Düzenle
+            </div>
+            <div
               onClick={handleDelete}
-              className="um-btn-danger flex items-center gap-2"
+              className="ev-btn ev-btn-danger" style={{ cursor: 'pointer' }}
             >
-              <Trash2 className="w-4 h-4" /> Sil
-            </button>
+              <i className="fa-solid fa-trash-can"></i>
+              Sil
+            </div>
           </div>
         )}
       </header>
@@ -118,8 +120,8 @@ const AnnouncementView = () => {
         {/* Title Area */}
         <div className="p-8 border-b border-slate-800/50 bg-gradient-to-br from-slate-900 to-slate-950">
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <div className="icon-box purple">
-              <Megaphone className="w-6 h-6" />
+            <div className="ev-icon ev-icon-purple ev-icon-lg">
+              <i className="fa-solid fa-bullhorn"></i>
             </div>
             <span className={`text-xs uppercase font-bold px-3 py-1.5 rounded-full border ${getPriorityColor(announcement.priority)}`}>
               {getPriorityLabel(announcement.priority)}
@@ -135,18 +137,18 @@ const AnnouncementView = () => {
           </h1>
           <div className="flex flex-wrap items-center gap-6 text-sm text-slate-400">
             <span className="flex items-center gap-2">
-              <UserIcon className="w-4 h-4 text-slate-500" />
+              <i className="fa-solid fa-user w-4 h-4 text-slate-500"></i>
               {announcement.created_by_name || announcement.created_by_username}
             </span>
             <span className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-slate-500" />
+              <i className="fa-solid fa-calendar w-4 h-4 text-slate-500"></i>
               {new Date(announcement.created_at).toLocaleDateString('tr-TR', {
                 day: 'numeric', month: 'long', year: 'numeric',
                 hour: '2-digit', minute: '2-digit'
               })}
             </span>
             <span className="flex items-center gap-2">
-              <Eye className="w-4 h-4 text-slate-500" />
+              <i className="fa-solid fa-eye w-4 h-4 text-slate-500"></i>
               {announcement.view_count || 0} görüntülenme
             </span>
           </div>

@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft, Edit3, Key, ToggleLeft, ToggleRight, Trash2,
-  User as UserIcon, Mail, Phone, MapPin, Building2, Calendar,
-  Shield, Clock, AlertCircle, CheckCircle2, Loader
-} from 'lucide-react';
+// Lucide imports removed
 
 const UserProfile = () => {
   const { id } = useParams();
@@ -128,7 +124,7 @@ const UserProfile = () => {
   if (loading) {
     return (
       <div className="um-loading-page animate-in">
-        <Loader className="w-8 h-8 animate-spin text-primary" />
+        <i className="fa-solid fa-spinner fa-spin w-8 h-8 text-primary"></i>
         <span>Loading profile...</span>
       </div>
     );
@@ -137,9 +133,9 @@ const UserProfile = () => {
   if (!user) {
     return (
       <div className="um-loading-page animate-in">
-        <AlertCircle className="w-8 h-8 text-[var(--error)]" />
+        <i className="fa-solid fa-circle-exclamation w-8 h-8 text-[var(--error)]"></i>
         <span>{error || 'User not found'}</span>
-        <button onClick={() => navigate('/dashboard/users')} className="um-btn-secondary mt-4">
+        <button onClick={() => navigate('/dashboard/users')} className="ev-btn ev-btn-secondary" style={{ marginTop: '1rem' }}>
           Back to Users
         </button>
       </div>
@@ -153,8 +149,8 @@ const UserProfile = () => {
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/dashboard/users')} className="um-back-btn">
-            <ArrowLeft className="w-5 h-5" />
+          <button onClick={() => navigate('/dashboard/users')} className="ev-btn ev-btn-icon ev-btn-secondary" style={{ borderRadius: '50%' }}>
+            <i className="fa-solid fa-arrow-left w-5 h-5"></i>
           </button>
           <div className="flex items-center gap-4">
             <div className="um-profile-avatar">
@@ -171,23 +167,25 @@ const UserProfile = () => {
         <div className="um-actions-bar">
           {hasPerm('user_update') && (
             <>
-              <button onClick={() => navigate(`/dashboard/users/${id}/edit`)} className="um-btn-secondary">
-                <Edit3 className="w-4 h-4" /> Edit
-              </button>
-              <button onClick={() => setShowResetModal(true)} className="um-btn-secondary">
-                <Key className="w-4 h-4" /> Reset Password
-              </button>
-              <button onClick={handleToggleStatus}
-                className={`um-btn-secondary ${user.is_active ? 'text-success' : 'text-warning'}`}>
-                {user.is_active ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+              <div onClick={() => navigate(`/dashboard/users/${id}/edit`)} className="ev-btn ev-btn-secondary" style={{ cursor: 'pointer' }}>
+                <i className="fa-solid fa-pen-to-square"></i>
+                Edit
+              </div>
+              <div onClick={() => setShowResetModal(true)} className="ev-btn ev-btn-secondary" style={{ cursor: 'pointer' }}>
+                <i className="fa-solid fa-key"></i>
+                Reset Password
+              </div>
+              <div onClick={handleToggleStatus} className="ev-btn ev-btn-secondary" style={{ cursor: 'pointer' }}>
+                {user.is_active ? <i className="fa-solid fa-toggle-on"></i> : <i className="fa-solid fa-toggle-off"></i>}
                 {user.is_active ? 'Deactivate' : 'Activate'}
-              </button>
+              </div>
             </>
           )}
           {hasPerm('user_delete') && (
-            <button onClick={handleDelete} className="um-btn-danger">
-              <Trash2 className="w-4 h-4" /> Delete
-            </button>
+            <div onClick={handleDelete} className="ev-btn ev-btn-danger" style={{ cursor: 'pointer' }}>
+              <i className="fa-solid fa-trash-can"></i>
+              Delete
+            </div>
           )}
         </div>
       </header>
@@ -195,12 +193,12 @@ const UserProfile = () => {
       {/* Alerts */}
       {error && (
         <div className="um-alert-error animate-in">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" /><span>{error}</span>
+          <i className="fa-solid fa-circle-exclamation w-5 h-5 flex-shrink-0"></i><span>{error}</span>
         </div>
       )}
       {msg && (
         <div className="um-alert-success animate-in">
-          <CheckCircle2 className="w-5 h-5 flex-shrink-0" /><span>{msg}</span>
+          <i className="fa-solid fa-circle-check w-5 h-5 flex-shrink-0"></i><span>{msg}</span>
         </div>
       )}
 
@@ -208,7 +206,7 @@ const UserProfile = () => {
         {/* Status & Role Card */}
         <div className="premium-card delay-1">
           <div className="um-section-header">
-            <div className="icon-box"><Shield className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-primary"><i className="fa-solid fa-shield-halved"></i></div>
             <h2>Account Status</h2>
           </div>
           <div className="um-detail-list">
@@ -222,7 +220,7 @@ const UserProfile = () => {
             <div className="um-detail-row">
               <span className="um-detail-label">Role</span>
               <div className={`badge ${user.role_name === 'Admin' ? 'positive' : ''}`}>
-                {user.role_name === 'Admin' ? <Shield className="w-3 h-3" /> : <UserIcon className="w-3 h-3" />}
+                {user.role_name === 'Admin' ? <i className="fa-solid fa-shield-halved w-3 h-3 mr-1"></i> : <i className="fa-solid fa-user w-3 h-3 mr-1"></i>}
                 {user.role_name}
               </div>
             </div>
@@ -238,7 +236,7 @@ const UserProfile = () => {
         {/* Personal Information */}
         <div className="premium-card delay-2">
           <div className="um-section-header">
-            <div className="icon-box purple"><UserIcon className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-purple"><i className="fa-solid fa-user"></i></div>
             <h2>Personal Information</h2>
           </div>
           <div className="um-detail-list">
@@ -268,36 +266,36 @@ const UserProfile = () => {
         {/* Contact Information */}
         <div className="premium-card delay-3">
           <div className="um-section-header">
-            <div className="icon-box success"><Mail className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-success"><i className="fa-solid fa-envelope"></i></div>
             <h2>Contact Information</h2>
           </div>
           <div className="um-detail-list">
             <div className="um-detail-row">
-              <span className="um-detail-label"><Phone className="w-3 h-3" /> Phone 1</span>
+              <span className="um-detail-label"><i className="fa-solid fa-phone w-3 h-3 mr-1"></i> Phone 1</span>
               <span className="um-detail-value">{user.phone1 || '—'}</span>
             </div>
             <div className="um-detail-row">
-              <span className="um-detail-label"><Phone className="w-3 h-3" /> Phone 2</span>
+              <span className="um-detail-label"><i className="fa-solid fa-phone w-3 h-3 mr-1"></i> Phone 2</span>
               <span className="um-detail-value">{user.phone2 || '—'}</span>
             </div>
             <div className="um-detail-row">
-              <span className="um-detail-label"><Mail className="w-3 h-3" /> Email 1</span>
+              <span className="um-detail-label"><i className="fa-solid fa-envelope w-3 h-3 mr-1"></i> Email 1</span>
               <span className="um-detail-value">{user.email1 || '—'}</span>
             </div>
             <div className="um-detail-row">
-              <span className="um-detail-label"><Mail className="w-3 h-3" /> Email 2</span>
+              <span className="um-detail-label"><i className="fa-solid fa-envelope w-3 h-3 mr-1"></i> Email 2</span>
               <span className="um-detail-value">{user.email2 || '—'}</span>
             </div>
             <div className="um-detail-row">
-              <span className="um-detail-label"><Mail className="w-3 h-3" /> Email 3</span>
+              <span className="um-detail-label"><i className="fa-solid fa-envelope w-3 h-3 mr-1"></i> Email 3</span>
               <span className="um-detail-value">{user.email3 || '—'}</span>
             </div>
             <div className="um-detail-row">
-              <span className="um-detail-label"><Mail className="w-3 h-3" /> Email 4</span>
+              <span className="um-detail-label"><i className="fa-solid fa-envelope w-3 h-3 mr-1"></i> Email 4</span>
               <span className="um-detail-value">{user.email4 || '—'}</span>
             </div>
             <div className="um-detail-row">
-              <span className="um-detail-label"><MapPin className="w-3 h-3" /> Address</span>
+              <span className="um-detail-label"><i className="fa-solid fa-location-dot w-3 h-3 mr-1"></i> Address</span>
               <span className="um-detail-value">{user.address || '—'}</span>
             </div>
           </div>
@@ -306,7 +304,7 @@ const UserProfile = () => {
         {/* Work Information */}
         <div className="premium-card delay-1">
           <div className="um-section-header">
-            <div className="icon-box warning"><Building2 className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-warning"><i className="fa-solid fa-building"></i></div>
             <h2>Work Information</h2>
           </div>
           <div className="um-detail-list">
@@ -348,26 +346,26 @@ const UserProfile = () => {
         {/* System Information */}
         <div className="premium-card delay-2">
           <div className="um-section-header">
-            <div className="icon-box"><Clock className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-primary"><i className="fa-solid fa-clock"></i></div>
             <h2>System Information</h2>
           </div>
           <div className="um-detail-list">
             <div className="um-detail-row">
-              <span className="um-detail-label"><Calendar className="w-3 h-3" /> Created At</span>
+              <span className="um-detail-label"><i className="fa-solid fa-calendar w-3 h-3 mr-1"></i> Created At</span>
               <span className="um-detail-value">{formatDateTime(user.created_at)}</span>
             </div>
             <div className="um-detail-row">
-              <span className="um-detail-label"><Calendar className="w-3 h-3" /> Updated At</span>
+              <span className="um-detail-label"><i className="fa-solid fa-calendar w-3 h-3 mr-1"></i> Updated At</span>
               <span className="um-detail-value">{formatDateTime(user.updated_at)}</span>
             </div>
             <div className="um-detail-row">
-              <span className="um-detail-label"><UserIcon className="w-3 h-3" /> Created By</span>
+              <span className="um-detail-label"><i className="fa-solid fa-user-circle w-3 h-3 mr-1"></i> Created By</span>
               <span className="um-detail-value">
                 {user.created_by_name || '—'}
               </span>
             </div>
             <div className="um-detail-row">
-              <span className="um-detail-label"><Clock className="w-3 h-3" /> Last Login</span>
+              <span className="um-detail-label"><i className="fa-solid fa-clock w-3 h-3 mr-1"></i> Last Login</span>
               <span className="um-detail-value">{formatDateTime(user.last_login)}</span>
             </div>
           </div>
@@ -400,11 +398,11 @@ const UserProfile = () => {
               />
             </div>
             <div className="um-modal-actions mt-6">
-              <button onClick={() => { setShowResetModal(false); setNewPassword(''); setConfirmPassword(''); }} className="um-btn-secondary">
+              <button onClick={() => { setShowResetModal(false); setNewPassword(''); setConfirmPassword(''); }} className="ev-btn ev-btn-secondary">
                 Cancel
               </button>
-              <button onClick={handleResetPassword} className="um-btn-primary" disabled={resetLoading}>
-                {resetLoading ? <Loader className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
+              <button onClick={handleResetPassword} className="ev-btn ev-btn-primary" disabled={resetLoading}>
+                {resetLoading ? <i className="fa-solid fa-spinner fa-spin w-4 h-4 mr-2"></i> : <i className="fa-solid fa-key w-4 h-4 mr-2"></i>}
                 Reset
               </button>
             </div>

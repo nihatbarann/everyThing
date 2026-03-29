@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { User as UserIcon, Mail, Phone, MapPin, Building2, Shield, Loader, Save, CheckCircle2, AlertCircle, Calendar, Clock, Key } from 'lucide-react';
+// Lucide imports removed
 
 const MyProfile = () => {
   const navigate = useNavigate();
@@ -110,7 +110,7 @@ const MyProfile = () => {
   if (loading) {
     return (
       <div className="um-loading-page animate-in">
-        <Loader className="w-8 h-8 animate-spin text-primary" />
+        <i className="fa-solid fa-spinner fa-spin w-8 h-8 text-primary"></i>
         <span>Profil yükleniyor...</span>
       </div>
     );
@@ -133,12 +133,12 @@ const MyProfile = () => {
 
       {error && (
         <div className="um-alert-error animate-in">
-          <AlertCircle className="w-5 h-5 shrink-0" /><span>{error}</span>
+          <i className="fa-solid fa-circle-exclamation w-5 h-5 shrink-0"></i><span>{error}</span>
         </div>
       )}
       {msg && (
         <div className="um-alert-success animate-in">
-          <CheckCircle2 className="w-5 h-5 shrink-0" /><span>{msg}</span>
+          <i className="fa-solid fa-circle-check w-5 h-5 shrink-0"></i><span>{msg}</span>
         </div>
       )}
 
@@ -149,16 +149,16 @@ const MyProfile = () => {
           <button 
             type="button" 
             onClick={() => setShowPasswordModal(true)} 
-            className="um-btn-secondary"
+            className="ev-btn ev-btn-secondary"
           >
-            <Key className="w-4 h-4" /> Şifremi Değiştir
+            <i className="fa-solid fa-key"></i> Şifremi Değiştir
           </button>
         </div>
 
         {/* Hesap Bilgileri */}
         <div className="premium-card delay-1">
           <div className="um-section-header">
-            <div className="icon-box"><Shield className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-primary"><i className="fa-solid fa-shield-halved"></i></div>
             <h2>Hesap Durumu</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -180,7 +180,7 @@ const MyProfile = () => {
         {/* Kişisel Bilgiler */}
         <div className="premium-card delay-2">
           <div className="um-section-header">
-            <div className="icon-box purple"><UserIcon className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-purple"><i className="fa-solid fa-user"></i></div>
             <h2>Kişisel Bilgiler</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -219,7 +219,7 @@ const MyProfile = () => {
         {/* İletişim Bilgileri */}
         <div className="premium-card delay-3">
           <div className="um-section-header">
-            <div className="icon-box success"><Mail className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-success"><i className="fa-solid fa-envelope"></i></div>
             <h2>İletişim Bilgileri</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -240,15 +240,15 @@ const MyProfile = () => {
               <input type="email" name="email4" value={formData.email4 || ''} onChange={handleChange} disabled={isReadonly} className="w-full" />
             </div>
             <div className={`um-field ${isReadonly ? 'opacity-70' : ''}`}>
-              <label><Phone className="w-3 h-3 inline mr-1"/> Telefon 1</label>
+              <label><i className="fa-solid fa-phone w-3 h-3 inline mr-1"></i> Telefon 1</label>
               <input type="text" name="phone1" value={formData.phone1 || ''} onChange={handleChange} disabled={isReadonly} className="w-full" />
             </div>
             <div className={`um-field ${isReadonly ? 'opacity-70' : ''}`}>
-              <label><Phone className="w-3 h-3 inline mr-1"/> Telefon 2</label>
+              <label><i className="fa-solid fa-phone w-3 h-3 inline mr-1"></i> Telefon 2</label>
               <input type="text" name="phone2" value={formData.phone2 || ''} onChange={handleChange} disabled={isReadonly} className="w-full" />
             </div>
             <div className={`um-field md:col-span-2 ${isReadonly ? 'opacity-70' : ''}`}>
-              <label><MapPin className="w-3 h-3 inline mr-1"/> Adres</label>
+              <label><i className="fa-solid fa-location-dot w-3 h-3 inline mr-1"></i> Adres</label>
               <textarea name="address" value={formData.address || ''} onChange={handleChange} disabled={isReadonly} className="w-full" rows="3"></textarea>
             </div>
           </div>
@@ -257,7 +257,7 @@ const MyProfile = () => {
         {/* İş Bilgileri */}
         <div className="premium-card">
           <div className="um-section-header">
-            <div className="icon-box warning"><Building2 className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-warning"><i className="fa-solid fa-building"></i></div>
             <h2>İş Bilgileri</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -299,24 +299,24 @@ const MyProfile = () => {
         {/* Sistem Bilgileri */}
         <div className="premium-card">
           <div className="um-section-header">
-            <div className="icon-box"><Clock className="w-5 h-5" /></div>
+            <div className="ev-icon ev-icon-primary"><i className="fa-solid fa-clock"></i></div>
             <h2>Sistem Bilgileri</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="um-field opacity-70">
-              <label><Calendar className="w-3 h-3 inline mr-1"/> Kayıt Tarihi</label>
+              <label><i className="fa-solid fa-calendar-alt w-3 h-3 inline mr-1"></i> Kayıt Tarihi</label>
               <input type="text" value={formatDateTime(user.created_at)} disabled className="w-full" />
             </div>
             <div className="um-field opacity-70">
-              <label><Calendar className="w-3 h-3 inline mr-1"/> Son Güncelleme</label>
+              <label><i className="fa-solid fa-calendar-alt w-3 h-3 inline mr-1"></i> Son Güncelleme</label>
               <input type="text" value={formatDateTime(user.updated_at)} disabled className="w-full" />
             </div>
             <div className="um-field opacity-70">
-              <label><UserIcon className="w-3 h-3 inline mr-1"/> Oluşturan</label>
+              <label><i className="fa-solid fa-user-circle w-3 h-3 inline mr-1"></i> Oluşturan</label>
               <input type="text" value={user.created_by_name || '—'} disabled className="w-full" />
             </div>
             <div className="um-field opacity-70">
-              <label><Clock className="w-3 h-3 inline mr-1"/> Son Giriş</label>
+              <label><i className="fa-solid fa-clock w-3 h-3 inline mr-1"></i> Son Giriş</label>
               <input type="text" value={formatDateTime(user.last_login)} disabled className="w-full" />
             </div>
           </div>
@@ -324,8 +324,8 @@ const MyProfile = () => {
 
         {isAdmin && (
           <div className="flex justify-end mt-4">
-            <button type="submit" className="um-btn-primary" disabled={saving}>
-              {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <button type="submit" className="ev-btn ev-btn-primary" disabled={saving}>
+              {saving ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-floppy-disk"></i>}
               Değişiklikleri Kaydet
             </button>
           </div>
@@ -358,11 +358,11 @@ const MyProfile = () => {
               />
             </div>
             <div className="um-modal-actions mt-6">
-              <button type="button" onClick={() => { setShowPasswordModal(false); setNewPassword(''); setConfirmPassword(''); }} className="um-btn-secondary">
+              <button type="button" onClick={() => { setShowPasswordModal(false); setNewPassword(''); setConfirmPassword(''); }} className="ev-btn ev-btn-secondary">
                 İptal
               </button>
-              <button type="button" onClick={handleChangePassword} className="um-btn-primary" disabled={passwordLoading}>
-                {passwordLoading ? <Loader className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
+              <button type="button" onClick={handleChangePassword} className="ev-btn ev-btn-primary" disabled={passwordLoading}>
+                {passwordLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-key"></i>}
                 Şifreyi Güncelle
               </button>
             </div>
