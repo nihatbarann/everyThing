@@ -9,6 +9,7 @@ const UserEdit = () => {
   const [formData, setFormData] = useState(null);
   const [roles, setRoles] = useState([]);
   const [managers, setManagers] = useState([]);
+  const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -20,7 +21,7 @@ const UserEdit = () => {
 
   const fetchAll = async () => {
     try {
-      const [userRes, rolesRes, managersRes] = await Promise.all([
+      const [userRes, rolesRes, managersRes, permsRes] = await Promise.all([
         axios.get(`/api/users/${id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         }),
@@ -28,6 +29,9 @@ const UserEdit = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         }),
         axios.get('/api/users/managers', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }),
+        axios.get('/api/permissions', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
       ]);
@@ -58,11 +62,13 @@ const UserEdit = () => {
         description: u.description || '',
         is_active: u.is_active?.toString() || '1',
         _username: u.username,
-        _role_name: u.role_name
+        _role_name: u.role_name,
+        permissions: u.permissions?.map(p => p.toString()) || []
       });
 
       setRoles(rolesRes.data.roles || []);
       setManagers(managersRes.data.managers || []);
+      setPermissions(permsRes.data.permissions || []);
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem('token');
@@ -77,6 +83,18 @@ const UserEdit = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handlePermissionToggle = (permId) => {
+    const idStr = permId.toString();
+    setFormData(prev => {
+      const perms = prev.permissions || [];
+      if (perms.includes(idStr)) {
+        return { ...prev, permissions: perms.filter(p => p !== idStr) };
+      } else {
+        return { ...prev, permissions: [...perms, idStr] };
+      }
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -180,6 +198,40 @@ const UserEdit = () => {
                 <option value="0">Passive</option>
               </select>
             </div>
+          </div>
+        </div>
+
+        {/* Permissions */}
+        <div className="premium-card delay-2">
+          <div className="um-section-header">
+            <div className="ev-icon ev-icon-error"><i className="fa-solid fa-shield-halved"></i></div>
+            <h2>Permissions (Yetkiler)</h2>
+          </div>
+          <p className="text-muted text-sm mb-4">Select the specific actions this user is allowed to perform.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {permissions.map(p => {
+              const isActive = formData.permissions.includes(p.id.toString());
+              return (
+                <label 
+                  key={p.id} 
+                  className={`permission-card ${isActive ? 'active' : ''}`}
+                >
+                  <input 
+                    type="checkbox" 
+                    checked={isActive}
+                    onChange={() => handlePermissionToggle(p.id)}
+                    style={{ display: 'none' }}
+                  />
+                  <div className="permission-indicator">
+                    <i className="fa-solid fa-check text-xs"></i>
+                  </div>
+                  <div className="permission-info">
+                    <span className="permission-title">{p.name}</span>
+                    <span className="permission-desc">{p.description}</span>
+                  </div>
+                </label>
+              );
+            })}
           </div>
         </div>
 

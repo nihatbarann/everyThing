@@ -28,6 +28,9 @@ $router->get('/api/roles', 'RoleController@index');
 $router->get('/api/roles/{id}/permissions', 'RoleController@getPermissions');
 $router->put('/api/roles/{id}/permissions', 'RoleController@updatePermissions');
 
+// Permissions (For User-Based Auth configuration)
+$router->get('/api/permissions', 'PermissionController@index');
+
 // Todo (Kanban) endpoints
 $router->get('/api/todos/archived', 'TodoController@archived');
 $router->get('/api/todos', 'TodoController@index');

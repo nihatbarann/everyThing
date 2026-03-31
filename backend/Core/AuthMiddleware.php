@@ -60,9 +60,9 @@ class AuthMiddleware {
         try {
             $pdo = Database::getConnection();
             $stmt = $pdo->prepare(
-                "SELECT COUNT(*) FROM role_permissions rp
-                 JOIN permissions p ON rp.permission_id = p.id
-                 JOIN users u ON u.role_id = rp.role_id
+                "SELECT COUNT(*) FROM user_permissions up
+                 JOIN permissions p ON up.permission_id = p.id
+                 JOIN users u ON u.id = up.user_id
                  WHERE u.id = ? AND p.`key` = ? AND u.deleted_at IS NULL"
             );
             $stmt->execute([$userId, $permissionKey]);
@@ -98,8 +98,8 @@ class AuthMiddleware {
             $pdo = Database::getConnection();
             $stmt = $pdo->prepare(
                 "SELECT p.`key` FROM permissions p
-                 JOIN role_permissions rp ON rp.permission_id = p.id
-                 JOIN users u ON u.role_id = rp.role_id
+                 JOIN user_permissions up ON up.permission_id = p.id
+                 JOIN users u ON u.id = up.user_id
                  WHERE u.id = ? AND u.deleted_at IS NULL"
             );
             $stmt->execute([$userId]);

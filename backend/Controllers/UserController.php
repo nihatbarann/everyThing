@@ -103,6 +103,11 @@ class UserController {
                 return;
             }
 
+            // Fetch user permissions
+            $permissionStmt = $pdo->prepare("SELECT permission_id FROM user_permissions WHERE user_id = ?");
+            $permissionStmt->execute([$id]);
+            $profile['permissions'] = $permissionStmt->fetchAll(PDO::FETCH_COLUMN);
+
             // Remove password from response
             unset($profile['password']);
 
@@ -193,6 +198,15 @@ class UserController {
             $stmt->execute($values);
 
             $newId = $pdo->lastInsertId();
+
+            // Insert permissions if provided
+            if (isset($data['permissions']) && is_array($data['permissions']) && $this->auth->isAdmin($user)) {
+                $permStmt = $pdo->prepare("INSERT INTO user_permissions (user_id, permission_id) VALUES (?, ?)");
+                foreach ($data['permissions'] as $permId) {
+                    $permStmt->execute([$newId, (int)$permId]);
+                }
+            }
+
             ActivityLogController::log($user['user_id'], $user['username'], 'user.create', "Created user {$username}", 'user', $newId);
 
             echo json_encode(['success' => true, 'user_id' => $newId, 'message' => 'User created successfully']);
@@ -270,6 +284,15 @@ class UserController {
             $sql = "UPDATE users SET " . implode(', ', $setClauses) . " WHERE id = ? AND deleted_at IS NULL";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
+
+            // Update user permissions (admin only)
+            if (isset($data['permissions']) && is_array($data['permissions']) && $this->auth->isAdmin($user)) {
+                $pdo->prepare("DELETE FROM user_permissions WHERE user_id = ?")->execute([$id]);
+                $permStmt = $pdo->prepare("INSERT INTO user_permissions (user_id, permission_id) VALUES (?, ?)");
+                foreach ($data['permissions'] as $permId) {
+                    $permStmt->execute([$id, (int)$permId]);
+                }
+            }
 
             ActivityLogController::log($user['user_id'], $user['username'], 'user.update', "Updated user ID {$id}", 'user', $id);
 

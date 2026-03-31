@@ -258,11 +258,9 @@ const Todos = () => {
         </div>
 
         <div className="flex gap-2 items-end">
-          {hasPerm('todo_view') && (
-            <button onClick={() => navigate('/dashboard/todos/archived')} className="ev-btn ev-btn-secondary">
-              <i className="fa-solid fa-box-open"></i> <span>Arşivlenenler</span>
-            </button>
-          )}
+          <button onClick={() => navigate('/dashboard/todos/archived')} className="ev-btn ev-btn-secondary">
+            <i className="fa-solid fa-box-open"></i> <span>Arşivlenenler</span>
+          </button>
           <div onClick={() => setShowModal(true)} className="ev-btn ev-btn-primary" style={{ cursor: 'pointer' }}>
             <i className="fa-solid fa-plus"></i>
             <span>Yeni Görev</span>

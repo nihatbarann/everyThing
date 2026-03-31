@@ -16,22 +16,20 @@ class MenuController {
         try {
             $pdo = Database::getConnection();
 
-            if ($auth->isAdmin($user)) {
-                // Admin sees all menus
-                $stmt = $pdo->query("SELECT id, name, path, icon, permission_key FROM menus ORDER BY id");
-            } else {
-                // Other users only see menus assigned to their role
-                $stmt = $pdo->prepare(
-                    "SELECT m.id, m.name, m.path, m.icon, m.permission_key
-                     FROM menus m
-                     JOIN role_menus rm ON rm.menu_id = m.id
-                     WHERE rm.role_id = ?
-                     ORDER BY m.id"
-                );
-                $stmt->execute([$user['role_id']]);
-            }
+            // Fetch all menus
+            $stmt = $pdo->query("SELECT id, name, path, icon, permission_key FROM menus ORDER BY id");
+            $allMenus = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $menus = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // Fetch user permissions
+            $userPermissions = $auth->getUserPermissions($user['user_id']);
+
+            // Filter menus
+            $menus = [];
+            foreach ($allMenus as $menu) {
+                if (empty($menu['permission_key']) || in_array($menu['permission_key'], $userPermissions)) {
+                    $menus[] = $menu;
+                }
+            }
 
             // Fetch custom order for this user
             $orderStmt = $pdo->prepare("SELECT menu_order FROM user_menu_order WHERE user_id = ?");

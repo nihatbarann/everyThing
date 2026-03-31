@@ -23,9 +23,6 @@ const ArchivedTodos = () => {
       });
       const perms = res.data.user?.permissions || [];
       setPermissions(perms);
-      if (perms.length > 0 && !perms.includes('todo_view')) {
-        navigate('/dashboard');
-      }
     } catch (err) { /* ignore */ }
   };
 

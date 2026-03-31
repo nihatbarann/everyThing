@@ -1917,3 +1917,96 @@ h1, h2, h3, h4, h5, h6 {
 .sidebar-nav-item:active .drag-handle {
   cursor: grabbing;
 }
+
+/* =========================================
+   PERMISSION CARDS (UserEdit / UserCreate)
+========================================= */
+.permission-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.15rem;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.permission-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.permission-card.active {
+  background: hsla(var(--hue-primary), 85%, 55%, 0.04);
+  border-color: var(--primary);
+  box-shadow: 0 4px 15px hsla(var(--hue-primary), 80%, 55%, 0.12);
+}
+
+.permission-card.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 4px;
+  background: var(--primary);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.permission-indicator {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-input);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 2px;
+}
+
+.permission-card:hover .permission-indicator {
+  border-color: var(--primary-light);
+}
+
+.permission-card.active .permission-indicator {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  box-shadow: 0 2px 8px hsla(var(--hue-primary), 80%, 55%, 0.3);
+}
+
+.permission-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.permission-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  transition: color 0.2s;
+  line-height: 1.2;
+}
+
+.permission-card.active .permission-title {
+  color: var(--primary);
+}
+
+.permission-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  opacity: 0.9;
+}

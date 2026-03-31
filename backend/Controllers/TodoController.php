@@ -10,11 +10,7 @@ class TodoController {
         $auth = new AuthMiddleware();
         $user = $auth->verifyToken();
         
-        if (!$auth->hasPermission($user['user_id'], 'todo_view')) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Forbidden - You do not have permission to access Todos']);
-            exit();
-        }
+        // Removed permission check since everyone should access Todos
         return $user;
     }
 

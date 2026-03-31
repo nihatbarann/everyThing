@@ -1,0 +1,44 @@
+[
+    {
+        "id": 1,
+        "name": "Dashboard",
+        "path": "\/dashboard",
+        "permission_key": null
+    },
+    {
+        "id": 2,
+        "name": "Users",
+        "path": "\/dashboard\/users",
+        "permission_key": "user_view"
+    },
+    {
+        "id": 3,
+        "name": "Settings",
+        "path": "\/dashboard\/settings",
+        "permission_key": "settings_view"
+    },
+    {
+        "id": 4,
+        "name": "Yap\u0131lacaklar",
+        "path": "\/dashboard\/todos",
+        "permission_key": null
+    },
+    {
+        "id": 6,
+        "name": "Notlar",
+        "path": "\/dashboard\/notes",
+        "permission_key": null
+    },
+    {
+        "id": 7,
+        "name": "Linkler",
+        "path": "\/dashboard\/links",
+        "permission_key": null
+    },
+    {
+        "id": 8,
+        "name": "Ara\u00e7lar",
+        "path": "\/dashboard\/tools",
+        "permission_key": "tools_view"
+    }
+]
