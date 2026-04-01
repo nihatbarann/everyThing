@@ -7,13 +7,16 @@ class AuthController {
     private $secretKey;
 
     public function __construct() {
-        $this->secretKey = getenv('JWT_SECRET') ?: 'EveryThing_Super_Secret_Key_Change_In_Prod';
+        $secret = getenv('JWT_SECRET');
+        if (!$secret || strlen($secret) < 32) {
+            $secret = 'EveryThing_Dev_Secret_Change_This_In_Production_Please_Min32';
+        }
+        $this->secretKey = $secret;
     }
 
     public function login() {
         try {
-            $raw = file_get_contents('php://input');
-            file_put_contents('C:/tmp/login_debug.log', date('[Y-m-d H:i:s] ') . "Login attempt: " . $raw . "\n", FILE_APPEND);
+            $raw  = file_get_contents('php://input');
             $data = json_decode($raw, true);
 
             if (!isset($data['username']) || !isset($data['password'])) {
