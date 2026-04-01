@@ -4,7 +4,15 @@ class AuthMiddleware {
     private $secretKey;
 
     public function __construct() {
-        $this->secretKey = getenv('JWT_SECRET') ?: 'EveryThing_Super_Secret_Key_Change_In_Prod';
+        // JWT secret MUST be set via environment variable in production.
+        // Set JWT_SECRET in Apache's SetEnv or system environment.
+        $secret = getenv('JWT_SECRET');
+        if (!$secret || strlen($secret) < 32) {
+            // In development, use a long default — but log a warning.
+            $secret = 'EveryThing_Dev_Secret_Change_This_In_Production_Please_Min32';
+            // Do NOT expose this in production; set JWT_SECRET env var instead.
+        }
+        $this->secretKey = $secret;
     }
 
     /**

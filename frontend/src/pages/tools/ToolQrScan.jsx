@@ -5,7 +5,8 @@ import { Html5Qrcode, Html5QrcodeScanner } from 'html5-qrcode';
 const ToolQrScan = () => {
   const navigate = useNavigate();
   const [scanResult, setScanResult] = useState('');
-  const [mode, setMode] = useState('camera'); // 'camera' or 'file'
+  const [mode, setMode] = useState('camera');
+  const [copied, setCopied] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -18,11 +19,9 @@ const ToolQrScan = () => {
       html5QrcodeScanner.render(
         (decodedText) => {
           setScanResult(decodedText);
-          html5QrcodeScanner.clear(); // stop scanning after success
+          html5QrcodeScanner.clear();
         },
-        (error) => {
-          // just ignore scanning errors
-        }
+        () => {}
       );
     }
     
@@ -48,7 +47,8 @@ const ToolQrScan = () => {
 
   const copyResult = () => {
     navigator.clipboard.writeText(scanResult);
-    alert('Kopyalandı!');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -59,82 +59,130 @@ const ToolQrScan = () => {
             <i className="fa-solid fa-arrow-left"></i>
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text-main)] flex items-center gap-2">
-              <i className="fa-solid fa-expand text-[var(--error)]"></i> 
-              QR Kod Okuyucu (Tarayıcı)
-            </h1>
+            <div className="flex items-center gap-2 mb-0.5">
+              <div className="ev-icon ev-icon-error ev-icon-sm"><i className="fa-solid fa-expand"></i></div>
+              <h1 className="text-2xl font-bold text-[var(--text-main)]">QR Kod Okuyucu</h1>
+            </div>
+            <p className="text-[var(--text-muted)] text-sm" style={{marginLeft:'2.5rem'}}>Kamera veya resim dosyasından QR kod okutun.</p>
           </div>
         </div>
       </header>
 
-      <div className="premium-card flex flex-col items-center">
+      <div className="premium-card flex flex-col items-center gap-6">
         
-        {/* Mode Switcher */}
+        {/* Mod Seçici */}
         {!scanResult && (
-          <div className="flex items-center gap-4 mb-8 bg-[var(--bg-hover)] p-2 rounded-xl border border-[var(--border-color)]">
+          <div className="tool-mode-switcher">
             <button 
               onClick={() => setMode('camera')}
-              className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${mode === 'camera' ? 'bg-[var(--error)] text-white shadow-md' : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'}`}
+              className={`tool-mode-btn ${mode === 'camera' ? 'active' : ''}`}
+              style={mode === 'camera' ? {color: 'var(--error)'} : {}}
             >
-              <i className="fa-solid fa-camera mr-2"></i> Kamera ile Tara
+              <i className="fa-solid fa-camera"></i> Kamera ile Tara
             </button>
             <button 
               onClick={() => setMode('file')}
-              className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${mode === 'file' ? 'bg-[var(--error)] text-white shadow-md' : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'}`}
+              className={`tool-mode-btn ${mode === 'file' ? 'active' : ''}`}
+              style={mode === 'file' ? {color: 'var(--error)'} : {}}
             >
-              <i className="fa-solid fa-file-image mr-2"></i> Dosyadan Oku
+              <i className="fa-solid fa-file-image"></i> Dosyadan Oku
             </button>
           </div>
         )}
 
-        {/* Scan Area */}
+        {/* Tarama Alanı */}
         {!scanResult ? (
-          <div className="w-full max-w-md bg-[var(--bg-surface)] p-6 rounded-2xl border-2 border-[var(--border-color)] shadow-sm">
+          <div style={{width:'100%', maxWidth:'440px'}}>
             {mode === 'camera' ? (
-              <div id="qr-reader" className="w-full rounded-xl overflow-hidden [&_video]:rounded-xl [&_video]:w-full" style={{border:'none'}} />
+              <div style={{
+                background: 'var(--bg-surface)',
+                border: '2px solid var(--border-color)',
+                borderRadius: 'var(--radius-xl)',
+                padding: '1.25rem',
+                boxShadow: 'var(--shadow-md)'
+              }}>
+                <div id="qr-reader" style={{width:'100%', borderRadius:'var(--radius-lg)', overflow:'hidden', border:'none'}} />
+              </div>
             ) : (
-              <div 
-                className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-[var(--border-color)] rounded-xl bg-[var(--bg-hover)] cursor-pointer hover:border-[var(--error)] transition-colors group text-center"
-                onClick={() => fileInputRef.current?.click()}
-              >
+              <div>
                 <div id="qr-reader-file" style={{display:'none'}}></div>
-                <div className="w-16 h-16 rounded-full bg-[var(--error)]/10 text-[var(--error)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                  <i className="fa-solid fa-upload"></i>
+                <div 
+                  className="tool-drop-zone"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="tool-drop-zone-icon" style={{background:'hsla(350, 78%, 52%, 0.12)', color:'var(--error)'}}>
+                    <i className="fa-solid fa-upload"></i>
+                  </div>
+                  <h3>QR Barkod Resmi Seçin</h3>
+                  <p>Masaüstünüzde okutmak istediğiniz bir ekran alıntısı veya fotoğraf ekleyin.</p>
+                  <span className="ev-btn" style={{backgroundColor:'var(--error)', color:'white', marginTop:'0.5rem', border:'none'}}>
+                    <i className="fa-solid fa-folder-open"></i> Gözat
+                  </span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    ref={fileInputRef} 
+                    onChange={handleFileUpload} 
+                    style={{display:'none'}} 
+                  />
                 </div>
-                <h3 className="text-lg font-semibold mb-1">QR Barkod Resmi Seçin</h3>
-                <p className="text-[var(--text-muted)] text-sm mb-4">Masaüstünüzde okutmak istediğiniz bir ekran alıntısı vb. ekleyin.</p>
-                <span className="ev-btn" style={{backgroundColor: 'var(--error)', color: 'white'}}>Gözat</span>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  ref={fileInputRef} 
-                  onChange={handleFileUpload} 
-                  className="hidden" 
-                />
               </div>
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center w-full max-w-xl slide-in-bottom">
-            <div className="w-20 h-20 bg-[var(--success)]/10 text-[var(--success)] rounded-full flex items-center justify-center text-3xl mb-4 border border-[var(--success)]/20 shadow-lg shadow-[var(--success)]/10">
+          <div style={{
+            display:'flex', flexDirection:'column', alignItems:'center',
+            width:'100%', maxWidth:'480px', gap:'1.5rem',
+            animation:'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both'
+          }}>
+            {/* Başarı İkonu */}
+            <div style={{
+              width:'72px', height:'72px',
+              background:'hsla(153, 70%, 38%, 0.12)',
+              border:'2px solid hsla(153, 70%, 38%, 0.25)',
+              borderRadius:'50%',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              fontSize:'1.75rem', color:'var(--success)',
+              boxShadow:'0 8px 24px hsla(153, 70%, 38%, 0.15)'
+            }}>
               <i className="fa-solid fa-check"></i>
             </div>
-            <h2 className="text-2xl font-bold mb-2">Başarıyla Okundu!</h2>
-            <p className="text-[var(--text-muted)] mb-8 text-center">İşte QR kodun içeriği:</p>
-
-            <div className="w-full p-6 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-2xl break-words relative min-h-[100px] flex items-center justify-center">
-              <span className="text-lg font-medium text-[var(--text-main)] relative z-10 leading-relaxed max-w-[90%] break-all">
-                {scanResult}
-              </span>
-              <div className="absolute top-0 left-0 w-full h-full border-2 border-[var(--success)] opacity-20 rounded-2xl pointer-events-none"></div>
+            
+            <div style={{textAlign:'center'}}>
+              <h2 style={{fontSize:'1.5rem', fontWeight:800, marginBottom:'0.35rem', color:'var(--text-main)'}}>Başarıyla Okundu!</h2>
+              <p style={{color:'var(--text-muted)', fontSize:'0.875rem'}}>İşte QR kodun içeriği:</p>
             </div>
 
-            <div className="flex gap-4 mt-8 w-full justify-center">
+            {/* Sonuç Metni */}
+            <div style={{
+              width:'100%', padding:'1.25rem 1.5rem',
+              background:'var(--bg-hover)',
+              border:'1.5px solid var(--border-color)',
+              borderRadius:'var(--radius-lg)',
+              position:'relative',
+              wordBreak:'break-all',
+              fontSize:'0.95rem', fontWeight:600,
+              color:'var(--text-main)', lineHeight:'1.7'
+            }}>
+              <div style={{
+                position:'absolute', inset:0,
+                border:'2px solid var(--success)',
+                borderRadius:'inherit',
+                opacity:0.15,
+                pointerEvents:'none'
+              }}></div>
+              {scanResult}
+            </div>
+
+            {/* Aksiyonlar */}
+            <div style={{display:'flex', gap:'0.75rem', width:'100%', justifyContent:'center', flexWrap:'wrap'}}>
               <button 
                 onClick={copyResult} 
-                className="ev-btn ev-btn-primary flex-1 max-w-[200px] justify-center shadow-lg hover:shadow-xl transition-all"
+                className="ev-btn ev-btn-primary flex-1 justify-center"
+                style={{maxWidth:'200px', ...(copied ? {backgroundColor:'var(--success)'} : {})}}
               >
-                <i className="fa-regular fa-copy"></i> Kopyala
+                <i className={`fa-${copied ? 'solid fa-check' : 'regular fa-copy'}`}></i>
+                {copied ? 'Kopyalandı!' : 'Kopyala'}
               </button>
               
               {scanResult.startsWith('http') && (
@@ -142,22 +190,23 @@ const ToolQrScan = () => {
                   href={scanResult} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="ev-btn justify-center flex-1 max-w-[200px] shadow-lg hover:shadow-xl transition-all"
-                  style={{ backgroundColor: 'var(--info)', color: 'white' }}
+                  className="ev-btn flex-1 justify-center"
+                  style={{ backgroundColor: 'var(--info)', color: 'white', maxWidth:'200px' }}
                 >
                   <i className="fa-solid fa-arrow-up-right-from-square"></i> Linke Git
                 </a>
               )}
             </div>
 
-            <div className="mt-8 pt-6 border-t border-[var(--border-color)] w-full text-center">
+            <div style={{paddingTop:'1.25rem', borderTop:'1px solid var(--border-color)', width:'100%', textAlign:'center'}}>
               <button 
                 onClick={() => setScanResult('')} 
-                className="ev-btn ev-btn-ghost group hover:bg-[var(--bg-hover)]"
+                className="ev-btn ev-btn-ghost"
               >
-                <i className="fa-solid fa-rotate-right group-hover:-rotate-90 transition-transform duration-300"></i> Eski Ekranına Dön & Yeni Tara
+                <i className="fa-solid fa-rotate-right" style={{marginRight:'0.4rem'}}></i>
+                Yeni QR Tara
               </button>
-           </div>
+            </div>
           </div>
         )}
 

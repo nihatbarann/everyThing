@@ -66,8 +66,6 @@ const ToolImagesToPdf = () => {
 
         const a4Width = 210;
         const a4Height = 297;
-        
-        // Sığdırma işlemi: Kenar boşlukları bırakalım (10mm)
         const margin = 10;
         const maxWidth = a4Width - (margin * 2);
         const maxHeight = a4Height - (margin * 2);
@@ -94,7 +92,6 @@ const ToolImagesToPdf = () => {
       doc.save('Resimler_Belgesi.pdf');
 
     } catch (e) {
-
       alert('PDF oluşturulurken hata meydana geldi.');
     } finally {
       setIsGenerating(false);
@@ -109,25 +106,26 @@ const ToolImagesToPdf = () => {
             <i className="fa-solid fa-arrow-left"></i>
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text-main)] flex items-center gap-2">
-              <i className="fa-solid fa-file-pdf text-[var(--info)]"></i> 
-              Resimlerden PDF Oluştur
-            </h1>
+            <div className="flex items-center gap-2 mb-0.5">
+              <div className="ev-icon ev-icon-info ev-icon-sm"><i className="fa-solid fa-file-pdf"></i></div>
+              <h1 className="text-2xl font-bold text-[var(--text-main)]">Resimlerden PDF Oluştur</h1>
+            </div>
+            <p className="text-[var(--text-muted)] text-sm" style={{marginLeft:'2.5rem'}}>PNG/JPG resimlerini birleştirerek çok sayfalı PDF oluşturun.</p>
           </div>
         </div>
       </header>
 
       <div className="premium-card flex flex-col gap-6">
         
-        <div className="flex items-center justify-between">
+        <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:'1rem'}}>
           <div>
-            <h3 className="text-lg font-bold">Sayfaları Sırala</h3>
-            <p className="text-sm text-[var(--text-muted)]">Her resim ayrı bir PDF sayfasına basılacaktır.</p>
+            <h3 style={{fontWeight:700, fontSize:'1rem', color:'var(--text-main)', marginBottom:'0.2rem'}}>Sayfaları Sırala</h3>
+            <p style={{fontSize:'0.8rem', color:'var(--text-muted)'}}>Her resim ayrı bir PDF sayfasına basılacaktır.</p>
           </div>
           <button 
             onClick={() => fileInputRef.current?.click()}
             className="ev-btn ev-btn-primary"
-            style={{backgroundColor: 'var(--info)'}}
+            style={{backgroundColor:'var(--info)'}}
           >
             <i className="fa-solid fa-plus"></i> Resim Ekle
           </button>
@@ -137,81 +135,87 @@ const ToolImagesToPdf = () => {
             multiple
             ref={fileInputRef} 
             onChange={handleFileChange} 
-            className="hidden" 
+            style={{display:'none'}} 
           />
         </div>
 
         {images.length === 0 ? (
           <div 
-            className="flex flex-col items-center justify-center p-16 border-2 border-dashed border-[var(--border-color)] rounded-xl bg-[var(--bg-hover)] cursor-pointer hover:border-[var(--info)] transition-colors group"
+            className="tool-drop-zone"
             onClick={() => fileInputRef.current?.click()}
           >
-            <div className="w-16 h-16 rounded-full bg-[var(--info)]/10 text-[var(--info)] flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+            <div className="tool-drop-zone-icon" style={{background:'hsla(200, 85%, 52%, 0.12)', color:'var(--info)'}}>
               <i className="fa-regular fa-images"></i>
             </div>
-            <h3 className="text-xl font-bold mb-2">Başlamak İçin Resimleri Seçin</h3>
-            <p className="text-[var(--text-muted)] text-center max-w-md">Sıralı halde birleştirmek istediğiniz tüm JPEG, PNG fotoğrafları buraya yükleyebilirsiniz.</p>
+            <h3>Başlamak İçin Resimleri Seçin</h3>
+            <p>Sıralı halde birleştirmek istediğiniz JPEG, PNG fotoğrafları buraya yükleyebilirsiniz.<br/>
+              <span style={{fontSize:'0.8rem', opacity:0.7}}>Birden fazla dosya aynı anda seçilebilir</span>
+            </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4 bg-[var(--bg-hover)] p-4 rounded-xl border border-[var(--border-color)]">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div style={{display:'flex', flexDirection:'column', gap:'1.25rem', background:'var(--bg-hover)', padding:'1rem', borderRadius:'var(--radius-lg)', border:'1px solid var(--border-color)'}}>
+            <div className="tool-img-grid">
               {images.map((img, index) => (
-                <div key={img.id} className="relative group bg-[var(--bg-surface)] p-2 rounded-lg border border-[var(--border-color)] shadow-sm flex flex-col gap-2">
-                  <div className="absolute top-1 left-1 bg-black/60 text-white rounded px-2 py-0.5 text-xs font-bold z-10 backdrop-blur-sm">
-                    {index + 1}
+                <div key={img.id} className="tool-img-tile">
+                  <div className="tool-img-tile-badge">{index + 1}</div>
+                  
+                  <div className="tool-img-tile-thumb">
+                    <img src={img.dataUrl} alt="preview" />
                   </div>
                   
-                  <div className="aspect-[3/4] w-full bg-[var(--bg-hover)] rounded border flex items-center justify-center overflow-hidden">
-                    <img src={img.dataUrl} alt="preview" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  
-                  <div className="text-xs text-center truncate px-1 text-[var(--text-muted)] font-medium" title={img.name}>
-                    {img.name}
-                  </div>
+                  <div className="tool-img-tile-name" title={img.name}>{img.name}</div>
 
-                  {/* Actions overlay */}
-                  <div className="flex justify-between items-center w-full px-1">
-                    <div className="flex gap-1">
+                  <div className="tool-img-tile-actions">
+                    <div style={{display:'flex', gap:'0.25rem'}}>
                       <button 
                         onClick={() => moveItem(index, -1)} 
                         disabled={index === 0}
-                        className="w-7 h-7 rounded bg-[var(--bg-hover)] hover:bg-[var(--primary)] hover:text-white transition-colors disabled:opacity-30 disabled:hover:bg-[var(--bg-hover)] disabled:hover:text-current flex items-center justify-center"
+                        className="tool-img-action-btn"
+                        title="Öne Al"
                       >
-                        <i className="fa-solid fa-chevron-left text-xs"></i>
+                        <i className="fa-solid fa-chevron-left"></i>
                       </button>
                       <button 
                         onClick={() => moveItem(index, 1)} 
                         disabled={index === images.length - 1}
-                        className="w-7 h-7 rounded bg-[var(--bg-hover)] hover:bg-[var(--primary)] hover:text-white transition-colors disabled:opacity-30 disabled:hover:bg-[var(--bg-hover)] disabled:hover:text-current flex items-center justify-center"
+                        className="tool-img-action-btn"
+                        title="Arkaya Al"
                       >
-                        <i className="fa-solid fa-chevron-right text-xs"></i>
+                        <i className="fa-solid fa-chevron-right"></i>
                       </button>
                     </div>
                     <button 
                       onClick={() => removeImage(img.id)}
-                      className="w-7 h-7 rounded text-[var(--error)] bg-[var(--error)]/10 hover:bg-[var(--error)] hover:text-white transition-colors flex items-center justify-center"
+                      className="tool-img-delete-btn"
+                      title="Kaldır"
                     >
-                      <i className="fa-solid fa-trash-can text-xs"></i>
+                      <i className="fa-solid fa-trash-can"></i>
                     </button>
                   </div>
                 </div>
               ))}
             </div>
             
-            <div className="pt-4 border-t border-[var(--border-color)] mt-2 flex flex-col sm:flex-row gap-4 items-center justify-between">
-              <div className="text-sm font-bold text-[var(--text-main)]">Toplam Sayfa: <span className="text-[var(--primary)]">{images.length}</span></div>
+            <div style={{
+              paddingTop:'1rem', borderTop:'1px solid var(--border-color)',
+              display:'flex', flexDirection:'row', gap:'1rem',
+              alignItems:'center', justifyContent:'space-between', flexWrap:'wrap'
+            }}>
+              <div style={{fontSize:'0.875rem', fontWeight:700, color:'var(--text-main)'}}>
+                Toplam Sayfa: <span style={{color:'var(--info)', fontSize:'1rem'}}>{images.length}</span>
+              </div>
               
-              <div className="flex gap-3 w-full sm:w-auto">
+              <div style={{display:'flex', gap:'0.75rem', flexWrap:'wrap'}}>
                 <button 
                   onClick={() => setImages([])} 
-                  className="ev-btn ev-btn-ghost flex-1 sm:flex-none justify-center"
+                  className="ev-btn ev-btn-ghost"
                 >
                   <i className="fa-solid fa-broom"></i> Tümünü Temizle
                 </button>
                 <button 
                   onClick={generatePDF}
                   disabled={isGenerating}
-                  className="ev-btn ev-btn-primary flex-1 sm:flex-none justify-center shadow-md shadow-[var(--info)]/20"
+                  className="ev-btn ev-btn-primary justify-center"
                   style={{ backgroundColor: 'var(--info)' }}
                 >
                   {isGenerating ? (

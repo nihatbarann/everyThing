@@ -31,7 +31,6 @@ const ToolImageCompress = () => {
 
   const handleCompress = async () => {
     if (!originalFile) return;
-
     setIsCompressing(true);
     
     const options = {
@@ -44,7 +43,6 @@ const ToolImageCompress = () => {
       const compressed = await imageCompression(originalFile, options);
       setCompressedFile(compressed);
     } catch (error) {
-
       alert('Resim sıkıştırılırken bir hata oluştu.');
     } finally {
       setIsCompressing(false);
@@ -65,6 +63,17 @@ const ToolImageCompress = () => {
     if(fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const savingsPercent = compressedFile
+    ? (100 - (compressedFile.size / originalFile.size) * 100).toFixed(1)
+    : 0;
+
+  const resolutionOptions = [
+    { value: 800,  label: '800px', desc: 'Web / E-Mail' },
+    { value: 1024, label: '1024px', desc: 'Normal Kullanım' },
+    { value: 1920, label: '1920px', desc: 'Full HD (Önerilir)' },
+    { value: 3840, label: '3840px', desc: '4K Çözünürlük' },
+  ];
+
   return (
     <div className="flex flex-col gap-6 lg:gap-8 pb-8 animate-in max-w-5xl mx-auto w-full">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
@@ -73,10 +82,11 @@ const ToolImageCompress = () => {
             <i className="fa-solid fa-arrow-left"></i>
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text-main)] flex items-center gap-2">
-              <i className="fa-solid fa-compress text-[var(--warning)]"></i> 
-              Dosya Boyutu Sıkıştır
-            </h1>
+            <div className="flex items-center gap-2 mb-0.5">
+              <div className="ev-icon ev-icon-warning ev-icon-sm"><i className="fa-solid fa-compress"></i></div>
+              <h1 className="text-2xl font-bold text-[var(--text-main)]">Dosya Boyutu Sıkıştır</h1>
+            </div>
+            <p className="text-[var(--text-muted)] text-sm" style={{marginLeft:'2.5rem'}}>Büyük resim dosyalarını kaliteyi koruyarak küçültün.</p>
           </div>
         </div>
       </header>
@@ -84,93 +94,125 @@ const ToolImageCompress = () => {
       <div className="premium-card flex flex-col gap-6">
         {!originalFile ? (
           <div 
-            className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-[var(--border-color)] rounded-xl bg-[var(--bg-hover)] cursor-pointer hover:border-[var(--warning)] transition-colors group"
+            className="tool-drop-zone"
             onClick={() => fileInputRef.current?.click()}
           >
-            <div className="w-16 h-16 rounded-full bg-[var(--warning)]/10 text-[var(--warning)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+            <div className="tool-drop-zone-icon" style={{background: 'hsla(38, 92%, 48%, 0.12)', color: 'var(--warning)'}}>
               <i className="fa-solid fa-cloud-arrow-up"></i>
             </div>
-            <h3 className="text-lg font-semibold mb-1">Büyük Dosyanızı Yükleyin</h3>
-            <p className="text-[var(--text-muted)] text-sm mb-4">MB'larca büyüklükteki resimleri çok az kalite kaybıyla KB'lara düşürün.</p>
-            <span className="ev-btn ev-btn-primary" style={{backgroundColor: 'var(--warning)', color: '#000'}}>Dosya Seç</span>
+            <h3>Büyük Dosyanızı Yükleyin</h3>
+            <p>MB'larca büyüklükteki resimleri çok az kalite kaybıyla küçültün.<br/>
+              <span style={{fontSize:'0.8rem', opacity:0.7}}>PNG, JPG, WEBP desteklenir</span>
+            </p>
+            <span className="ev-btn ev-btn-warning" style={{marginTop:'0.5rem', backgroundColor:'var(--warning)', color:'#111', borderColor:'var(--warning)'}}>
+              <i className="fa-solid fa-folder-open"></i> Dosya Seç
+            </span>
             <input 
               type="file" 
               accept="image/*" 
               ref={fileInputRef} 
               onChange={handleFileChange} 
-              className="hidden" 
+              style={{display:'none'}} 
             />
           </div>
         ) : (
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1 flex flex-col gap-4">
               
-              {/* Orijinal Preivew */}
-              <div className="flex flex-col gap-2 p-5 bg-[var(--bg-hover)] rounded-xl border border-[var(--border-color)]">
-                <div className="font-bold border-b border-[var(--border-color)] pb-2 mb-2 flex justify-between items-center text-[var(--text-main)]">
-                  <span>Orijinal Dosya</span>
-                  <span className="text-[var(--primary)]">{formatBytes(originalFile.size)}</span>
+              {/* Orijinal Dosya */}
+              <div className="tool-info-bar" style={{flexDirection:'column', alignItems:'flex-start', gap:'0.5rem', padding:'1rem 1.25rem'}}>
+                <div style={{display:'flex', justifyContent:'space-between', width:'100%', marginBottom:'0.25rem'}}>
+                  <span style={{fontSize:'0.75rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'var(--text-muted)'}}>Orijinal Dosya</span>
+                  <span style={{fontSize:'1rem', fontWeight:800, color:'var(--text-main)'}}>{formatBytes(originalFile.size)}</span>
                 </div>
-                <div className="text-sm">
-                  <strong>Dosya Adı:</strong> <span className="text-[var(--text-muted)]">{originalFile.name}</span>
+                <div className="tool-info-bar-name" style={{fontSize:'0.875rem'}}>
+                  <i className="fa-regular fa-file-image" style={{color:'var(--primary)'}}></i>
+                  <span title={originalFile.name}>{originalFile.name}</span>
                 </div>
               </div>
 
-              {/* Sonuç Preview */}
+              {/* Sonuç Alanı */}
               {isCompressing ? (
-                <div className="flex flex-col gap-3 p-10 items-center justify-center bg-[var(--bg-hover)] rounded-xl border border-[var(--border-color)] border-dashed animate-pulse">
-                  <i className="fa-solid fa-spinner fa-spin text-3xl text-[var(--warning)]"></i>
-                  <span className="font-medium text-[var(--text-muted)]">Akıllı sıkıştırma yapılıyor...</span>
+                <div className="tool-processing">
+                  <i className="fa-solid fa-spinner tool-processing-spinner" style={{color:'var(--warning)'}}></i>
+                  <span className="tool-processing-text">Akıllı sıkıştırma yapılıyor...</span>
                 </div>
               ) : compressedFile ? (
-                <div className="flex flex-col gap-2 p-5 bg-[var(--success)]/10 rounded-xl border border-[var(--success)]/30 mt-2 slide-in-bottom">
-                  <div className="font-bold border-b border-[var(--success)]/30 pb-2 mb-2 flex justify-between items-center text-[var(--success)]">
-                    <span><i className="fa-solid fa-circle-check mr-2"></i>Sıkıştırılmış Dosya</span>
-                    <span className="text-xl">{formatBytes(compressedFile.size)}</span>
+                <div className="tool-result-card">
+                  <div className="tool-result-header">
+                    <span><i className="fa-solid fa-circle-check" style={{marginRight:'0.5rem'}}></i>Sıkıştırılmış Dosya</span>
+                    <span className="tool-result-size">{formatBytes(compressedFile.size)}</span>
                   </div>
-                  <div className="text-sm font-medium text-[var(--success)]">
-                    Tam <strong>%{(100 - (compressedFile.size / originalFile.size) * 100).toFixed(1)}</strong> alan tasarrufu sağladınız!
+                  <div className="tool-result-saving">
+                    <i className="fa-solid fa-fire-flame-curved" style={{marginRight:'0.4rem'}}></i>
+                    Tam <strong>%{savingsPercent}</strong> alan tasarrufu sağladınız!
                   </div>
                 </div>
               ) : (
-                <div className="p-8 text-center text-[var(--text-muted)] bg-[var(--bg-surface)] rounded-xl border border-[var(--border-color)]">
-                  Henüz sıkıştırma işlemi yapılmadı.
+                <div style={{
+                  padding:'2rem', textAlign:'center',
+                  color:'var(--text-subtle)', background:'var(--bg-surface)',
+                  borderRadius:'var(--radius-lg)', border:'1px dashed var(--border-color)',
+                  fontSize:'0.875rem'
+                }}>
+                  <i className="fa-regular fa-clock" style={{fontSize:'1.5rem', display:'block', marginBottom:'0.5rem', opacity:0.5}}></i>
+                  Sıkıştırma işlemi için hazır. Ayarları yapıp başlatın.
                 </div>
               )}
             </div>
 
-            {/* Controls */}
-            <div className="w-full md:w-80 flex flex-col gap-5 bg-[var(--bg-surface)] p-5 rounded-xl border border-[var(--border-color)] shadow-sm h-fit">
-              <h3 className="font-bold text-lg mb-1 border-b border-[var(--border-color)] pb-3">Sıkıştırma Ayarları</h3>
+            <div className="tool-panel" style={{width:'100%', maxWidth:'320px'}}>
+              <div className="tool-panel-title">
+                <i className="fa-solid fa-sliders"></i> Sıkıştırma Ayarları
+              </div>
               
               <div className="um-field">
-                <label>Hedef Maksimum Boyut (MB)</label>
+                <label>Hedef Maksimum Boyut</label>
                 <div className="flex items-center gap-2">
-                  <input type="number" step="0.1" min="0.1" value={maxSizeMB} onChange={(e) => setMaxSizeMB(e.target.value)} className="flex-1" />
-                  <span className="text-[var(--text-muted)] text-sm font-medium">MB</span>
+                  <input 
+                    type="number" 
+                    step="0.1" min="0.1" 
+                    value={maxSizeMB} 
+                    onChange={(e) => setMaxSizeMB(e.target.value)} 
+                    className="flex-1" 
+                  />
+                  <span style={{
+                    flexShrink:0, fontSize:'0.8rem', fontWeight:700, padding:'0.4rem 0.6rem',
+                    background:'var(--bg-hover)', borderRadius:'var(--radius-sm)',
+                    border:'1px solid var(--border-color)', color:'var(--text-muted)'
+                  }}>MB</span>
                 </div>
               </div>
 
               <div className="um-field">
-                <label>Maksimum Çözünürlük (px)</label>
-                <select value={maxWidthOrHeight} onChange={e => setMaxWidthOrHeight(Number(e.target.value))} className="h-10">
-                  <option value={800}>800px (Web İçi / E-Mail)</option>
-                  <option value={1024}>1024px (Normal Kullanım)</option>
-                  <option value={1920}>1920px (Full HD Görünüm)</option>
-                  <option value={3840}>3840px (4K Çözünürlük)</option>
-                </select>
-                <div className="text-xs text-[var(--text-muted)] mt-1 ml-1 leading-relaxed">
-                  (Resmin genişliği veya yüksekliği bu değeri geçemez. Geçerse küçültülür.)
+                <label>Maksimum Çözünürlük</label>
+                <div className="tool-radio-group" style={{marginTop:'0.25rem'}}>
+                  {resolutionOptions.map(opt => (
+                    <div 
+                      key={opt.value}
+                      className={`tool-radio-item ${maxWidthOrHeight === opt.value ? 'selected' : ''}`}
+                      onClick={() => setMaxWidthOrHeight(opt.value)}
+                      style={{'--item-color': 'var(--warning)'}}
+                    >
+                      <div className="tool-radio-indicator" style={maxWidthOrHeight === opt.value ? {borderColor:'var(--warning)'} : {}}>
+                        <div className="tool-radio-dot" style={{background:'var(--warning)'}}></div>
+                      </div>
+                      <div>
+                        <div className="tool-radio-text">{opt.label}</div>
+                        <div style={{fontSize:'0.72rem', color:'var(--text-subtle)'}}>{opt.desc}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-[var(--border-color)] mt-4 flex flex-col gap-3">
+              <div style={{paddingTop:'0.875rem', borderTop:'1px solid var(--border-color)', display:'flex', flexDirection:'column', gap:'0.75rem'}}>
                 {!compressedFile ? (
                   <button 
                     onClick={handleCompress}
                     disabled={isCompressing}
                     className="ev-btn w-full justify-center"
-                    style={{ backgroundColor: 'var(--warning)', color: '#000' }}
+                    style={{ backgroundColor: 'var(--warning)', color: '#111', border:'none' }}
                   >
                     {isCompressing ? (
                       <><i className="fa-solid fa-spinner fa-spin"></i> İşleniyor</>
@@ -181,15 +223,14 @@ const ToolImageCompress = () => {
                 ) : (
                   <button 
                     onClick={handleDownload}
-                    className="ev-btn w-full justify-center"
-                    style={{ backgroundColor: 'var(--success)', color: 'white' }}
+                    className="ev-btn ev-btn-success w-full justify-center"
                   >
                     <i className="fa-solid fa-download"></i>
                     Dosyayı İndir
                   </button>
                 )}
                 <button onClick={reset} className="ev-btn ev-btn-secondary w-full justify-center">
-                  Farklı İşlem
+                  <i className="fa-solid fa-rotate-left"></i> Farklı İşlem
                 </button>
               </div>
             </div>

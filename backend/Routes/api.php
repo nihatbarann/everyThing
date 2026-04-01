@@ -75,8 +75,14 @@ $router->put('/api/system/config', 'SystemController@updateConfig');
 $router->get('/api/system/db-info', 'SystemController@getDbInfo');
 $router->get('/api/system/export-db', 'SystemController@exportDb');
 
+// Data Export / Import (per-user personal data)
+$router->get('/api/data/export', 'DataController@export');
+$router->post('/api/data/import/preview', 'DataController@previewImport');
+$router->post('/api/data/import', 'DataController@import');
+
 // Activity Logs (admin-only)
 $router->get('/api/activity-logs', 'ActivityLogController@index');
+
 
 // Menu Order (per-user)
 $router->post('/api/menus/order', 'MenuController@saveOrder');

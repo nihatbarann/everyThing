@@ -90,10 +90,11 @@ const ToolImageResize = () => {
             <i className="fa-solid fa-arrow-left"></i>
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text-main)] flex items-center gap-2">
-              <i className="fa-solid fa-crop-simple text-[var(--primary)]"></i> 
-              Resim Boyutlandır
-            </h1>
+            <div className="flex items-center gap-2 mb-0.5">
+              <div className="ev-icon ev-icon-primary ev-icon-sm"><i className="fa-solid fa-crop-simple"></i></div>
+              <h1 className="text-2xl font-bold text-[var(--text-main)]">Resim Boyutlandır</h1>
+            </div>
+            <p className="text-[var(--text-muted)] text-sm" style={{marginLeft:'2.5rem'}}>Resimlerin piksel boyutlarını hassas şekilde ayarlayın.</p>
           </div>
         </div>
       </header>
@@ -101,43 +102,58 @@ const ToolImageResize = () => {
       <div className="premium-card flex flex-col gap-6">
         {!imageSrc ? (
           <div 
-            className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-[var(--border-color)] rounded-xl bg-[var(--bg-hover)] cursor-pointer hover:border-[var(--primary)] transition-colors group"
+            className="tool-drop-zone group"
             onClick={() => fileInputRef.current?.click()}
           >
-            <div className="w-16 h-16 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+            <div className="tool-drop-zone-icon" style={{background: 'hsla(222, 85%, 55%, 0.12)', color: 'var(--primary)'}}>
               <i className="fa-solid fa-cloud-arrow-up"></i>
             </div>
-            <h3 className="text-lg font-semibold mb-1">Resim Yükle</h3>
-            <p className="text-[var(--text-muted)] text-sm mb-4">Sürükleyip bırakabilir veya tıklayarak seçebilirsiniz.</p>
-            <span className="ev-btn ev-btn-primary">Dosya Seç</span>
+            <h3>Resim Yükle</h3>
+            <p>Sürükleyip bırakabilir veya tıklayarak seçebilirsiniz.<br/>
+              <span style={{fontSize:'0.8rem', opacity:0.7}}>PNG, JPG, WEBP, GIF desteklenir</span>
+            </p>
+            <span className="ev-btn ev-btn-primary" style={{marginTop: '0.5rem'}}>
+              <i className="fa-solid fa-folder-open"></i> Dosya Seç
+            </span>
             <input 
               type="file" 
               accept="image/*" 
               ref={fileInputRef} 
               onChange={handleFileChange} 
-              className="hidden" 
+              style={{display:'none'}} 
             />
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="flex-1 flex flex-col gap-4">
-              <div className="aspect-video bg-[var(--bg-hover)] rounded-xl border border-[var(--border-color)] overflow-hidden flex items-center justify-center p-4 relative" style={{ minHeight: '300px' }}>
-                <img src={imageSrc} alt="Preview" className="max-w-full max-h-full object-contain drop-shadow-lg" />
+              <div className="tool-preview-frame" style={{ minHeight: '300px' }}>
+                <img src={imageSrc} alt="Preview" style={{maxWidth:'100%', maxHeight:'100%', objectFit:'contain'}} />
               </div>
-              <div className="text-sm font-medium text-[var(--text-muted)] flex justify-between px-2 bg-[var(--bg-surface)] p-2 rounded-lg border border-[var(--border-color)]">
-                <span className="truncate max-w-[60%]" title={fileName}><i className="fa-regular fa-file-image mr-1"></i> {fileName}</span>
-                <span>Orijinal: <span className="font-bold text-[var(--text-main)]">{originalSize.w} x {originalSize.h}</span></span>
+              <div className="tool-info-bar">
+                <div className="tool-info-bar-name">
+                  <i className="fa-regular fa-file-image" style={{color: 'var(--primary)'}}></i>
+                  <span title={fileName}>{fileName}</span>
+                </div>
+                <span className="tool-info-bar-meta">
+                  Orijinal: <strong style={{color: 'var(--text-main)'}}>{originalSize.w} × {originalSize.h} px</strong>
+                </span>
               </div>
             </div>
 
-            <div className="w-full lg:w-80 flex flex-col gap-5 bg-[var(--bg-surface)] p-5 rounded-xl border border-[var(--border-color)] shadow-sm h-fit">
-              <h3 className="font-bold text-lg mb-1 border-b border-[var(--border-color)] pb-3">Boyut Ayarları</h3>
+            <div className="tool-panel" style={{width:'100%', maxWidth:'320px'}}>
+              <div className="tool-panel-title">
+                <i className="fa-solid fa-sliders"></i> Boyut Ayarları
+              </div>
               
               <div className="um-field">
                 <label>Genişlik (X)</label>
                 <div className="flex items-center gap-2">
                   <input type="number" value={newSize.w} onChange={(e) => handleWidthChange(e.target.value)} min="1" className="flex-1" />
-                  <span className="text-[var(--text-muted)] text-sm font-medium px-2">px</span>
+                  <span style={{
+                    flexShrink:0, fontSize:'0.8rem', fontWeight:700, padding:'0.4rem 0.6rem',
+                    background:'var(--bg-hover)', borderRadius:'var(--radius-sm)',
+                    border:'1px solid var(--border-color)', color:'var(--text-muted)'
+                  }}>px</span>
                 </div>
               </div>
 
@@ -145,23 +161,30 @@ const ToolImageResize = () => {
                 <label>Yükseklik (Y)</label>
                 <div className="flex items-center gap-2">
                   <input type="number" value={newSize.h} onChange={(e) => handleHeightChange(e.target.value)} min="1" className="flex-1" />
-                  <span className="text-[var(--text-muted)] text-sm font-medium px-2">px</span>
+                  <span style={{
+                    flexShrink:0, fontSize:'0.8rem', fontWeight:700, padding:'0.4rem 0.6rem',
+                    background:'var(--bg-hover)', borderRadius:'var(--radius-sm)',
+                    border:'1px solid var(--border-color)', color:'var(--text-muted)'
+                  }}>px</span>
                 </div>
               </div>
               
-              <div className="flex items-center mt-1 bg-[var(--bg-hover)] p-2 rounded-lg border border-[var(--border-color)]">
-                <label className="flex items-center gap-2 cursor-pointer select-none w-full">
+              <label className="tool-toggle-wrap">
+                <span className="tool-toggle-label">
+                  <i className="fa-solid fa-link"></i>
+                  En-Boy Oranını Koru
+                </span>
+                <div className="tool-toggle-switch">
                   <input 
                     type="checkbox" 
                     checked={keepAspectRatio}
                     onChange={(e) => setKeepAspectRatio(e.target.checked)}
-                    className="w-4 h-4 text-[var(--primary)] bg-[var(--bg-surface)] border-[var(--border-color)] rounded"
                   />
-                  <span className="text-sm font-medium">En-Boy oranını koru <i className="fa-solid fa-link text-muted ml-1"></i></span>
-                </label>
-              </div>
+                  <div className="tool-toggle-track"></div>
+                </div>
+              </label>
 
-              <div className="pt-4 border-t border-[var(--border-color)] mt-2 flex flex-col gap-3">
+              <div style={{paddingTop:'0.875rem', borderTop:'1px solid var(--border-color)', display:'flex', flexDirection:'column', gap:'0.75rem'}}>
                 <button 
                   onClick={handleDownload}
                   disabled={!newSize.w || !newSize.h}
@@ -171,7 +194,7 @@ const ToolImageResize = () => {
                   Yeni Halini İndir
                 </button>
                 <button onClick={reset} className="ev-btn ev-btn-secondary w-full justify-center">
-                  Temizle & Farklı Seç
+                  <i className="fa-solid fa-rotate-left"></i> Temizle &amp; Farklı Seç
                 </button>
               </div>
             </div>
@@ -179,8 +202,7 @@ const ToolImageResize = () => {
         )}
       </div>
       
-      {/* Hidden canvas for image processing */}
-      <canvas ref={canvasRef} className="hidden" />
+      <canvas ref={canvasRef} style={{display:'none'}} />
     </div>
   );
 };

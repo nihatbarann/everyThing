@@ -8,7 +8,7 @@ const ToolQrGenerate = () => {
   const [size, setSize] = useState(256);
   const [fgColor, setFgColor] = useState('#000000');
   const [bgColor, setBgColor] = useState('#ffffff');
-  const [level, setLevel] = useState('H'); // L, M, Q, H
+  const [level, setLevel] = useState('H');
 
   const handleDownload = () => {
     const canvas = document.getElementById('qr-canvas-download');
@@ -25,6 +25,20 @@ const ToolQrGenerate = () => {
     }
   };
 
+  const sizeOptions = [
+    { value: 128,  label: 'Küçük', desc: '128 × 128 px' },
+    { value: 256,  label: 'Orta',  desc: '256 × 256 px' },
+    { value: 512,  label: 'Büyük', desc: '512 × 512 px' },
+    { value: 1024, label: 'Çok Büyük', desc: '1024 × 1024 px' },
+  ];
+
+  const levelOptions = [
+    { value: 'L', label: 'Düşük',    desc: '%7 Kayıp Kurtarma' },
+    { value: 'M', label: 'Orta',     desc: '%15 Kayıp Kurtarma' },
+    { value: 'Q', label: 'Yüksek',   desc: '%25 Kayıp Kurtarma' },
+    { value: 'H', label: 'En Yüksek',desc: '%30 Kayıp Kurtarma' },
+  ];
+
   return (
     <div className="flex flex-col gap-6 lg:gap-8 pb-8 animate-in max-w-5xl mx-auto w-full">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
@@ -33,86 +47,120 @@ const ToolQrGenerate = () => {
             <i className="fa-solid fa-arrow-left"></i>
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text-main)] flex items-center gap-2">
-              <i className="fa-solid fa-qrcode text-[var(--info)]"></i> 
-              QR Kod Oluştur
-            </h1>
+            <div className="flex items-center gap-2 mb-0.5">
+              <div className="ev-icon ev-icon-info ev-icon-sm"><i className="fa-solid fa-qrcode"></i></div>
+              <h1 className="text-2xl font-bold text-[var(--text-main)]">QR Kod Oluştur</h1>
+            </div>
+            <p className="text-[var(--text-muted)] text-sm" style={{marginLeft:'2.5rem'}}>Web siteniz, Wi-Fi veya herhangi bir metin için QR kodu yaratın.</p>
           </div>
         </div>
       </header>
 
       <div className="premium-card flex flex-col lg:flex-row gap-8">
         
-        {/* Left column / Controls */}
+        {/* Sol: Kontroller */}
         <div className="flex-1 flex flex-col gap-5">
+          
+          {/* Metin/URL girişi */}
           <div className="um-field">
-            <label className="text-base font-bold text-[var(--text-main)]"><i className="fa-solid fa-link text-[var(--info)] mr-1"></i> QR Kodu İçeriği (Metin / Bağlantı)</label>
+            <label><i className="fa-solid fa-link" style={{color:'var(--info)', marginRight:'0.3rem'}}></i>QR Kodu İçeriği</label>
             <textarea 
               value={text} 
               onChange={e => setText(e.target.value)}
-              placeholder="Sitenizin bağlantısı, bir telefon numarası numarası, veya metin..."
-              className="resize-none h-32 text-base p-4"
+              placeholder="Sitenizin bağlantısı, bir telefon numarası veya metin..."
+              style={{resize:'none', height:'7rem', fontSize:'0.95rem', lineHeight:'1.6'}}
             />
-            <p className="text-xs text-[var(--text-muted)] mt-1 ml-1">Karekod anında sağ tarafta oluşturulacaktır.</p>
+            <p style={{fontSize:'0.75rem', color:'var(--text-muted)', marginTop:'0.25rem'}}>
+              <i className="fa-solid fa-bolt" style={{color:'var(--info)', marginRight:'0.3rem'}}></i>
+              QR kod anında sağ tarafta oluşturulacaktır.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-2 bg-[var(--bg-hover)] p-5 rounded-xl border border-[var(--border-color)]">
-            <div className="um-field">
-              <label>Karekod Kare Boyutu</label>
-              <select value={size} onChange={e => setSize(Number(e.target.value))} className="h-10">
-                <option value={128}>Küçük (128x128)</option>
-                <option value={256}>Orta (256x256)</option>
-                <option value={512}>Büyük (512x512)</option>
-                <option value={1024}>Çok Büyük (1024x1024)</option>
-              </select>
+          {/* Boyut Seçimi */}
+          <div className="um-field">
+            <label>İndirme Boyutu</label>
+            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem', marginTop:'0.25rem'}}>
+              {sizeOptions.map(opt => (
+                <div
+                  key={opt.value}
+                  className={`tool-radio-item ${size === opt.value ? 'selected' : ''}`}
+                  onClick={() => setSize(opt.value)}
+                >
+                  <div className="tool-radio-indicator">
+                    <div className="tool-radio-dot" style={{background:'var(--info)'}}></div>
+                  </div>
+                  <div>
+                    <div className="tool-radio-text">{opt.label}</div>
+                    <div style={{fontSize:'0.7rem', color:'var(--text-subtle)'}}>{opt.desc}</div>
+                  </div>
+                </div>
+              ))}
             </div>
+          </div>
 
-            <div className="um-field">
-              <label>Hata Düzeltme Seviyesi</label>
-              <select value={level} onChange={e => setLevel(e.target.value)} className="h-10">
-                <option value="L">Düşük (%7 Kayıp Kurtarma)</option>
-                <option value="M">Orta (%15 Kayıp Kurtarma)</option>
-                <option value="Q">Yüksek (%25 Kayıp Kurtarma)</option>
-                <option value="H">En Yüksek (%30 Kayıp Kurtarma)</option>
-              </select>
+          {/* Hata Düzeltme */}
+          <div className="um-field">
+            <label>Hata Düzeltme Seviyesi</label>
+            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem', marginTop:'0.25rem'}}>
+              {levelOptions.map(opt => (
+                <div
+                  key={opt.value}
+                  className={`tool-radio-item ${level === opt.value ? 'selected' : ''}`}
+                  onClick={() => setLevel(opt.value)}
+                >
+                  <div className="tool-radio-indicator">
+                    <div className="tool-radio-dot" style={{background:'var(--info)'}}></div>
+                  </div>
+                  <div>
+                    <div className="tool-radio-text">{opt.label}</div>
+                    <div style={{fontSize:'0.7rem', color:'var(--text-subtle)'}}>{opt.desc}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-            
+          </div>
+
+          {/* Renkler */}
+          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem'}}>
             <div className="um-field">
               <label>Ön Plan Rengi</label>
-              <div className="flex items-center gap-3">
-                <input 
-                  type="color" 
-                  value={fgColor} 
-                  onChange={e => setFgColor(e.target.value)}
-                  className="w-10 h-10 p-0 border-0 rounded cursor-pointer"
-                />
-                <span className="text-sm font-mono text-[var(--text-muted)]">{fgColor.toUpperCase()}</span>
+              <div className="tool-color-wrap">
+                <div className="tool-color-preview" style={{background: fgColor}}>
+                  <input 
+                    type="color" 
+                    value={fgColor} 
+                    onChange={e => setFgColor(e.target.value)}
+                  />
+                  <div className="tool-color-preview-swatch" style={{background: fgColor}}></div>
+                </div>
+                <span className="tool-color-hex">{fgColor.toUpperCase()}</span>
               </div>
             </div>
-
             <div className="um-field">
-              <label>Arka Plan Rengi</label>
-              <div className="flex items-center gap-3">
-                <input 
-                  type="color" 
-                  value={bgColor} 
-                  onChange={e => setBgColor(e.target.value)}
-                  className="w-10 h-10 p-0 border-0 rounded cursor-pointer"
-                />
-                <span className="text-sm font-mono text-[var(--text-muted)]">{bgColor.toUpperCase()}</span>
+              <label>Arkaplan Rengi</label>
+              <div className="tool-color-wrap">
+                <div className="tool-color-preview" style={{background: bgColor}}>
+                  <input 
+                    type="color" 
+                    value={bgColor} 
+                    onChange={e => setBgColor(e.target.value)}
+                  />
+                  <div className="tool-color-preview-swatch" style={{background: bgColor}}></div>
+                </div>
+                <span className="tool-color-hex">{bgColor.toUpperCase()}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right column / Preview */}
-        <div className="w-full lg:w-96 flex flex-col items-center">
-          <div className="bg-[var(--bg-surface)] border-2 border-[var(--border-color)] rounded-2xl w-full p-8 flex flex-col items-center justify-center gap-6 shadow-sm">
+        {/* Sağ: Önizleme */}
+        <div style={{width:'100%', maxWidth:'320px', display:'flex', flexDirection:'column', alignItems:'center'}}>
+          <div className="tool-qr-preview-card" style={{width:'100%'}}>
+            <div className="tool-qr-preview-title">
+              <i className="fa-solid fa-eye" style={{marginRight:'0.4rem'}}></i>Canlı Önizleme
+            </div>
             
-            <div className="font-bold text-center text-lg w-full border-b border-[var(--border-color)] pb-3">Canlı Önizleme</div>
-            
-            <div className="p-4 bg-white rounded-xl shadow-md flex items-center justify-center" style={{ minWidth: '200px', minHeight: '200px' }}>
-              {/* Visible SVG rendering for smooth UI scaling */}
+            <div className="tool-qr-canvas-wrap">
               <QRCodeSVG 
                 value={text || ' '} 
                 size={200}
@@ -121,9 +169,7 @@ const ToolQrGenerate = () => {
                 level={level}
                 includeMargin={false}
               />
-              
-              {/* Hidden Canvas rendering for high-res download */}
-              <div className="hidden">
+              <div style={{display:'none'}}>
                 <QRCodeCanvas 
                   id="qr-canvas-download"
                   value={text || ' '} 
@@ -136,13 +182,13 @@ const ToolQrGenerate = () => {
               </div>
             </div>
 
-            <p className="text-xs text-center text-[var(--text-muted)] max-w-xs leading-relaxed">
-              Önizleme 200px sabit boyuttadır. İndirme yaptığınızda seçtiğiniz <strong>{size}x{size}</strong> boyutunda indirilecektir.
+            <p style={{fontSize:'0.75rem', textAlign:'center', color:'var(--text-muted)', lineHeight:'1.6', maxWidth:'220px'}}>
+              Önizleme 200px sabit boyuttur. İndirme yapıldığında <strong>{size}×{size} px</strong> boyutunda kaydedilir.
             </p>
 
             <button 
               onClick={handleDownload}
-              className="ev-btn ev-btn-primary w-full justify-center mt-2 shadow-sm"
+              className="ev-btn ev-btn-primary w-full justify-center"
               style={{ backgroundColor: 'var(--info)' }}
               disabled={!text}
             >

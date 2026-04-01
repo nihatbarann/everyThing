@@ -34,6 +34,14 @@ class InstallController {
     }
 
     public function setup() {
+        // Block if already installed (install.lock exists)
+        $lockFile = __DIR__ . '/../config/install.lock';
+        if (file_exists($lockFile)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'System is already installed. Setup is disabled.']);
+            return;
+        }
+
         // Read JSON body
         $data = json_decode(file_get_contents('php://input'), true);
 
@@ -62,6 +70,9 @@ class InstallController {
 
             // Save Config File
             $this->saveConfig($data);
+
+            // Create install.lock to prevent re-installation
+            file_put_contents($lockFile, date('Y-m-d H:i:s'));
 
             echo json_encode(['success' => true, 'message' => 'System successfully installed!']);
 

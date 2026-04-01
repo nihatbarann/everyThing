@@ -21,11 +21,9 @@ const ToolWordToPdf = () => {
     reader.onload = async (event) => {
       try {
         const arrayBuffer = event.target.result;
-        // Mammoth reads DOCX and translates it to simple HTML
         const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
-        setHtmlContent(result.value); // The generated HTML
+        setHtmlContent(result.value);
       } catch (err) {
-
         alert('Word dosyası okunamadı. Desteklenmeyen bir format veya şifreli olabilir.');
         setFileName('');
       } finally {
@@ -54,13 +52,13 @@ const ToolWordToPdf = () => {
         doc.save(`${name}_indirilen.pdf`);
         setIsProcessing(false);
       },
-      x: 30, // margins
+      x: 30,
       y: 30,
       width: doc.internal.pageSize.getWidth() - 60,
       windowWidth: targetElement.scrollWidth,
       autoPaging: 'text',
-    }).catch(err => {
-      alert("PDF oluşturulurken hata oluştu. Lütfen dosyanızın çok karmaşık medya içermediğinden emin olun.");
+    }).catch(() => {
+      alert("PDF oluşturulurken hata oluştu.");
       setIsProcessing(false);
     });
   };
@@ -73,19 +71,20 @@ const ToolWordToPdf = () => {
             <i className="fa-solid fa-arrow-left"></i>
           </button>
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <i className="fa-solid fa-file-word text-[var(--primary)]"></i> 
-              Word'den PDF'e Çevir
-            </h1>
+            <div className="flex items-center gap-2 mb-0.5">
+              <div className="ev-icon ev-icon-primary ev-icon-sm"><i className="fa-solid fa-file-word"></i></div>
+              <h1 className="text-2xl font-bold text-[var(--text-main)]">Word'den PDF'e Çevir</h1>
+            </div>
+            <p className="text-[var(--text-muted)] text-sm" style={{marginLeft:'2.5rem'}}>Düz metin (.docx) dosyalarını PDF formatına dönüştürüp indirin.</p>
           </div>
         </div>
       </header>
 
-      {/* Warning Alert */}
-      <div className="bg-[var(--warning)]/10 border border-[var(--warning)]/30 p-4 rounded-xl flex items-start gap-3">
-        <i className="fa-solid fa-circle-exclamation text-[var(--warning)] mt-1"></i>
-        <div className="text-sm">
-          <strong>Önemli Bilgi:</strong> Tarayıcı içinde dönüştürme yapıldığından Word içindeki özel fontlar, karmaşık grafikler ve hizalamalar birebir ölçüde PDF'ye geçmeyebilir. Genel metin içeriği ve başlıklar korunur.
+      {/* Uyarı */}
+      <div className="tool-alert-warn">
+        <i className="fa-solid fa-circle-exclamation"></i>
+        <div>
+          <strong>Önemli Bilgi:</strong> Tarayıcı içinde dönüştürme yapıldığından Word içindeki özel fontlar, karmaşık grafikler ve hizalamalar birebir PDF'ye geçmeyebilir. Genel metin içeriği ve başlıklar korunur.
         </div>
       </div>
 
@@ -93,51 +92,67 @@ const ToolWordToPdf = () => {
         
         {!fileName ? (
           <div 
-            className="flex flex-col items-center justify-center p-16 border-2 border-dashed border-[var(--border-color)] rounded-xl bg-[var(--bg-hover)] cursor-pointer hover:border-[var(--primary)] transition-colors group"
+            className="tool-drop-zone"
             onClick={() => fileInputRef.current?.click()}
           >
-            <div className="w-16 h-16 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center text-3xl mb-4 group-hover:-translate-y-2 transition-transform">
+            <div className="tool-drop-zone-icon" style={{background:'hsla(222, 85%, 55%, 0.12)', color:'var(--primary)'}}>
               <i className="fa-regular fa-file-word"></i>
             </div>
-            <h3 className="text-xl font-bold mb-2">Başlamak İçin .Docx Dosyası Seçin</h3>
-            <p className="text-[var(--text-muted)] text-center max-w-md mb-4">Bir Word dosyasındaki metin ve temel görselleri PDF A4 formatında oluşturun.</p>
-            <span className="ev-btn ev-btn-primary">Dosya Seç</span>
+            <h3>Başlamak İçin .Docx Dosyası Seçin</h3>
+            <p>Bir Word dosyasındaki metin ve temel görselleri PDF A4 formatında oluşturun.<br/>
+              <span style={{fontSize:'0.8rem', opacity:0.7}}>Yalnızca .docx uzantılı dosyalar desteklenir</span>
+            </p>
+            <span className="ev-btn ev-btn-primary" style={{marginTop:'0.5rem'}}>
+              <i className="fa-solid fa-folder-open"></i> Dosya Seç
+            </span>
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
-            <div className="flex justify-between items-center p-4 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl">
-              <div className="flex items-center gap-3">
-                <i className="fa-solid fa-file-invoice text-2xl text-[var(--primary)]"></i>
+          <div style={{display:'flex', flexDirection:'column', gap:'1.25rem'}}>
+            <div style={{
+              display:'flex', justifyContent:'space-between', alignItems:'center',
+              padding:'0.875rem 1.25rem',
+              background:'var(--bg-hover)', border:'1.5px solid var(--border-color)',
+              borderRadius:'var(--radius-lg)', flexWrap:'wrap', gap:'0.75rem'
+            }}>
+              <div style={{display:'flex', alignItems:'center', gap:'0.875rem'}}>
+                <div className="ev-icon ev-icon-primary">
+                  <i className="fa-solid fa-file-invoice"></i>
+                </div>
                 <div>
-                  <h4 className="font-bold max-w-xs truncate" title={fileName}>{fileName}</h4>
-                  <span className="text-xs text-[var(--success)] font-bold"><i className="fa-solid fa-check"></i> HTML'ye Çözümlendi</span>
+                  <h4 style={{fontWeight:700, color:'var(--text-main)', maxWidth:'240px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}
+                      title={fileName}>{fileName}</h4>
+                  <span style={{fontSize:'0.75rem', color:'var(--success)', fontWeight:700}}>
+                    <i className="fa-solid fa-check" style={{marginRight:'0.3rem'}}></i>HTML'ye Çözümlendi
+                  </span>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div style={{display:'flex', gap:'0.625rem'}}>
                 <button onClick={() => { setFileName(''); setHtmlContent(''); }} className="ev-btn ev-btn-ghost">
-                  İptal Et
+                  <i className="fa-solid fa-xmark"></i> İptal Et
                 </button>
                 <button onClick={handleDownload} disabled={isProcessing} className="ev-btn ev-btn-primary">
-                  {isProcessing ? <><i className="fa-solid fa-spinner fa-spin"></i> İşleniyor</> : <><i className="fa-solid fa-download"></i> PDF İndir</>}
+                  {isProcessing 
+                    ? <><i className="fa-solid fa-spinner fa-spin"></i> İşleniyor</>
+                    : <><i className="fa-solid fa-download"></i> PDF İndir</>
+                  }
                 </button>
               </div>
             </div>
             
-            <div className="bg-white text-black p-8 rounded-xl border border-gray-300 w-full overflow-auto max-h-[500px] shadow-inner" style={{ minHeight: '300px' }}>
-               <h3 className="text-center font-bold text-gray-400 border-b pb-2 mb-4">Metin Önizlemesi</h3>
-               
-               {/* Container for PDF Generation mapping */}
-               <div id="word-preview-container" className="text-[14px] leading-relaxed w-full">
+            <div className="tool-doc-preview">
+              <div className="tool-doc-preview-header">
+                <i className="fa-solid fa-eye" style={{marginRight:'0.4rem'}}></i>Metin Önizlemesi
+              </div>
+              <div className="tool-doc-preview-body">
+                <div id="word-preview-container">
                   <div 
                     dangerouslySetInnerHTML={{ __html: htmlContent }} 
-                    className="
-                      [&>p]:mb-4 [&>h1]:text-3xl [&>h1]:font-bold [&>h1]:mb-4 [&>h2]:text-2xl [&>h2]:font-bold [&>h2]:mb-3
-                      [&>table]:border-collapse [&>table]:border [&>table]:border-gray-300 [&>table]:w-full
-                      [&_td]:border [&_td]:border-gray-300 [&_td]:p-2 
-                      [&_img]:max-w-full [&_img]:h-auto
-                    "
+                    style={{
+                      lineHeight:'1.8', fontSize:'0.9rem'
+                    }}
                   />
-               </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -147,7 +162,7 @@ const ToolWordToPdf = () => {
           accept=".docx" 
           ref={fileInputRef} 
           onChange={handleFileChange} 
-          className="hidden" 
+          style={{display:'none'}} 
         />
       </div>
     </div>

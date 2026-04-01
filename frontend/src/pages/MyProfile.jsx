@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-// Lucide imports removed
 
 const MyProfile = () => {
   const navigate = useNavigate();
@@ -20,6 +19,13 @@ const MyProfile = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
+
+  // ── Data Export / Import ───────────────────────────────────────────
+  const [exportLoading, setExportLoading]   = useState(false);
+  const [importLoading, setImportLoading]   = useState(false);
+  const [importPreview, setImportPreview]   = useState(null);   // preview modal data
+  const [pendingPayload, setPendingPayload] = useState(null);   // raw JSON to confirm
+  const importFileRef = useRef(null);
 
   useEffect(() => {
     fetchProfile();
@@ -59,7 +65,7 @@ const MyProfile = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setMsg('Profil başarıyla güncellendi.');
-      fetchProfile(); // refresh data
+      fetchProfile();
       setTimeout(() => setMsg(null), 3000);
     } catch (err) {
       setError(err.response?.data?.error || 'Güncelleme başarısız.');
@@ -82,7 +88,6 @@ const MyProfile = () => {
     }
     setPasswordLoading(true);
     try {
-      // Assuming the backend allows users to hit this endpoint for themselves
       await axios.put(`/api/users/${user.id}/reset-password`, { password: newPassword }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
@@ -96,6 +101,90 @@ const MyProfile = () => {
       setTimeout(() => setError(null), 3000);
     } finally {
       setPasswordLoading(false);
+    }
+  };
+
+  // ── Export Handler ─────────────────────────────────────────────────
+  const handleExport = async () => {
+    setExportLoading(true);
+    setError(null);
+    try {
+      const res = await axios.get('/api/data/export', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        responseType: 'blob',
+      });
+      const blob = new Blob([res.data], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const date = new Date().toISOString().slice(0, 10);
+      link.href     = url;
+      link.download = `verilerim_${user.username}_${date}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setMsg('Verileriniz başarıyla dışa aktarıldı!');
+      setTimeout(() => setMsg(null), 3000);
+    } catch (err) {
+      setError('Dışa aktarma başarısız. Lütfen tekrar deneyin.');
+      setTimeout(() => setError(null), 4000);
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // ── Import: File selected → parse → preview modal ─────────────────
+  const handleImportFileSelected = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+
+    setImportLoading(true);
+    setError(null);
+    try {
+      const text    = await file.text();
+      const payload = JSON.parse(text);
+      
+      // Send to backend for validation & count
+      const res = await axios.post('/api/data/import/preview', payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      setPendingPayload(payload);
+      setImportPreview(res.data);
+    } catch (err) {
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else if (err instanceof SyntaxError) {
+        setError('Seçilen dosya geçerli bir JSON dosyası değil.');
+      } else {
+        setError('Dosya okunamadı veya geçersiz format.');
+      }
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  // ── Import: User confirmed → real import ──────────────────────────
+  const handleImportConfirm = async () => {
+    if (!pendingPayload) return;
+    setImportLoading(true);
+    setImportPreview(null);
+    try {
+      const res = await axios.post('/api/data/import', pendingPayload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      const c = res.data.imported;
+      setMsg(
+        `İçe aktarma tamamlandı! ${c.links} link, ${c.notes} not, ${c.todos} yapılacak, ${c.calendar} takvim etkinliği eklendi.`
+      );
+      setTimeout(() => setMsg(null), 6000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'İçe aktarma başarısız.');
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setImportLoading(false);
+      setPendingPayload(null);
     }
   };
 
@@ -119,7 +208,6 @@ const MyProfile = () => {
   if (!user) return null;
 
   const isAdmin = user.role_name === 'Admin';
-  // If not admin, completely disable all inputs visually and functionally
   const isReadonly = !isAdmin;
 
   return (
@@ -144,15 +232,68 @@ const MyProfile = () => {
 
       <form onSubmit={handleSave} className="flex flex-col gap-6">
         
-        {/* Şifre Değiştirme Butonu */}
-        <div className="flex justify-end">
-          <button 
-            type="button" 
-            onClick={() => setShowPasswordModal(true)} 
-            className="ev-btn ev-btn-secondary"
-          >
-            <i className="fa-solid fa-key"></i> Şifremi Değiştir
-          </button>
+        {/* ── Aksiyon Butonları ───────────────────────────────────── */}
+        <div className="premium-card" style={{padding: '1.25rem 1.5rem'}}>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Şifre Değiştir */}
+            <button 
+              type="button" 
+              onClick={() => setShowPasswordModal(true)} 
+              className="ev-btn ev-btn-secondary"
+            >
+              <i className="fa-solid fa-key"></i> Şifremi Değiştir
+            </button>
+
+            <div style={{
+              width: '1px', height: '32px',
+              background: 'var(--border-color)',
+              margin: '0 0.25rem',
+              flexShrink: 0
+            }}></div>
+
+            {/* Dışa Aktar */}
+            <button 
+              type="button" 
+              onClick={handleExport}
+              disabled={exportLoading}
+              className="ev-btn ev-btn-ghost"
+              title="Linklerinizi, notlarınızı, yapılacaklarınızı ve takvim etkinliklerinizi JSON dosyası olarak indirin"
+            >
+              {exportLoading
+                ? <><i className="fa-solid fa-spinner fa-spin"></i> Aktarılıyor...</>
+                : <><i className="fa-solid fa-file-export"></i> Verilerimi Dışa Aktar</>
+              }
+            </button>
+
+            {/* İçe Aktar */}
+            <button 
+              type="button" 
+              onClick={() => importFileRef.current?.click()}
+              disabled={importLoading}
+              className="ev-btn ev-btn-ghost"
+              title="Daha önce dışa aktardığınız JSON dosyasını bu hesaba yükleyin"
+            >
+              {importLoading
+                ? <><i className="fa-solid fa-spinner fa-spin"></i> Okunuyor...</>
+                : <><i className="fa-solid fa-file-import"></i> Verileri İçe Aktar</>
+              }
+            </button>
+            <input
+              type="file"
+              accept=".json,application/json"
+              ref={importFileRef}
+              onChange={handleImportFileSelected}
+              style={{display: 'none'}}
+            />
+          </div>
+          <p style={{
+            marginTop: '0.75rem', fontSize: '0.78rem',
+            color: 'var(--text-subtle)', lineHeight: '1.6'
+          }}>
+            <i className="fa-solid fa-circle-info" style={{marginRight: '0.35rem', color: 'var(--info)'}}></i>
+            <strong>Dışa Aktar</strong> ile link, not, yapılacak ve takvim verilerinizi şifreli JSON olarak indirin. 
+            <strong> İçe Aktar</strong> ile bu verileri aynı veya farklı bir hesaba aktarın.
+          </p>
         </div>
 
         {/* Hesap Bilgileri */}
@@ -332,7 +473,7 @@ const MyProfile = () => {
         )}
       </form>
 
-      {/* Password Reset Modal */}
+      {/* ── Password Reset Modal ─────────────────────────────────────── */}
       {showPasswordModal && createPortal(
         <div className="um-modal-overlay" onClick={() => setShowPasswordModal(false)}>
           <div className="um-modal" onClick={e => e.stopPropagation()}>
@@ -364,6 +505,100 @@ const MyProfile = () => {
               <button type="button" onClick={handleChangePassword} className="ev-btn ev-btn-primary" disabled={passwordLoading}>
                 {passwordLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-key"></i>}
                 Şifreyi Güncelle
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── Import Preview Modal ──────────────────────────────────────── */}
+      {importPreview && createPortal(
+        <div className="um-modal-overlay" onClick={() => { setImportPreview(null); setPendingPayload(null); }}>
+          <div className="um-modal" style={{maxWidth: '480px'}} onClick={e => e.stopPropagation()}>
+            
+            {/* Header */}
+            <div style={{display:'flex', alignItems:'center', gap:'0.875rem', marginBottom:'1.25rem'}}>
+              <div className="ev-icon ev-icon-primary" style={{flexShrink:0}}>
+                <i className="fa-solid fa-file-import"></i>
+              </div>
+              <div>
+                <h3 style={{margin:0}}>İçe Aktarma Özeti</h3>
+                <p style={{margin:0, fontSize:'0.8rem', color:'var(--text-muted)'}}>
+                  Aşağıdaki veriler mevcut hesabınıza <strong>eklenir</strong>, silinmez.
+                </p>
+              </div>
+            </div>
+
+            {/* Meta */}
+            <div style={{
+              padding: '0.75rem 1rem',
+              background: 'var(--bg-hover)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-color)',
+              marginBottom: '1.25rem',
+              fontSize: '0.8rem',
+              color: 'var(--text-muted)',
+              display: 'flex', flexDirection: 'column', gap: '0.3rem'
+            }}>
+              <span><i className="fa-solid fa-user" style={{marginRight:'0.4rem', color:'var(--primary)'}}></i>
+                Dışa aktaran: <strong style={{color:'var(--text-main)'}}>{importPreview.exported_by}</strong>
+              </span>
+              <span><i className="fa-solid fa-calendar" style={{marginRight:'0.4rem', color:'var(--primary)'}}></i>
+                Aktarım tarihi: <strong style={{color:'var(--text-main)'}}>{importPreview.exported_at}</strong>
+              </span>
+            </div>
+
+            {/* Counts Grid */}
+            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem', marginBottom:'1.5rem'}}>
+              {[
+                { label: 'Link',               icon: 'fa-link',        count: importPreview.counts.links,    color: 'var(--primary)' },
+                { label: 'Not',                icon: 'fa-file-lines',  count: importPreview.counts.notes,    color: 'var(--success)' },
+                { label: 'Yapılacak',          icon: 'fa-list-check',  count: importPreview.counts.todos,    color: 'var(--warning)' },
+                { label: 'Takvim Etkinliği',   icon: 'fa-calendar',    count: importPreview.counts.calendar, color: 'var(--info)'    },
+              ].map(item => (
+                <div key={item.label} style={{
+                  padding: '0.875rem 1rem',
+                  background: 'var(--bg-surface)',
+                  border: '1.5px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  display: 'flex', alignItems: 'center', gap: '0.75rem'
+                }}>
+                  <i className={`fa-solid ${item.icon}`} style={{color: item.color, fontSize:'1.1rem', flexShrink:0}}></i>
+                  <div>
+                    <div style={{fontSize:'1.5rem', fontWeight:800, color: item.color, lineHeight:1}}>{item.count}</div>
+                    <div style={{fontSize:'0.72rem', color:'var(--text-muted)', fontWeight:600, marginTop:'0.2rem'}}>{item.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Warning if all zero */}
+            {Object.values(importPreview.counts).every(v => v === 0) && (
+              <div className="tool-alert-warn" style={{marginBottom:'1rem'}}>
+                <i className="fa-solid fa-triangle-exclamation"></i>
+                <span>Bu dosyada içe aktarılacak herhangi bir veri bulunamadı.</span>
+              </div>
+            )}
+
+            <div className="um-modal-actions">
+              <button 
+                type="button" 
+                onClick={() => { setImportPreview(null); setPendingPayload(null); }} 
+                className="ev-btn ev-btn-secondary"
+              >
+                Vazgeç
+              </button>
+              <button 
+                type="button" 
+                onClick={handleImportConfirm}
+                className="ev-btn ev-btn-primary"
+                disabled={Object.values(importPreview.counts).every(v => v === 0) || importLoading}
+              >
+                {importLoading 
+                  ? <><i className="fa-solid fa-spinner fa-spin"></i> Aktarılıyor...</>
+                  : <><i className="fa-solid fa-check"></i> Evet, İçe Aktar</>
+                }
               </button>
             </div>
           </div>

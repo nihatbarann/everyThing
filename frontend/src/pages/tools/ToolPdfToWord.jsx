@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Document, Packer, Paragraph, TextRun } from "docx";
 
-// Set worker src directly from remote unpkg to avoid local worker path issues for pdf.js
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const ToolPdfToWord = () => {
@@ -29,13 +28,11 @@ const ToolPdfToWord = () => {
         
         let fullText = "";
         
-        // Loop through all pages to extract text
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
           
           let pageText = "";
-          // Each item represents a text string object in PDF
           for (const item of textContent.items) {
              pageText += item.str + " ";
           }
@@ -44,7 +41,6 @@ const ToolPdfToWord = () => {
         
         setExtractedText(fullText);
       } catch (err) {
-
         alert('PDF belgesinden metin ayıklanamadı. Belge sadece resim içeriyor veya şifreli olabilir.');
         setFileName('');
       } finally {
@@ -60,29 +56,21 @@ const ToolPdfToWord = () => {
     setIsProcessing(true);
     
     try {
-      // Split text by lines to create paragraphs in Word
       const textLines = extractedText.split('\n');
       const docChildren = textLines.map(line => {
         return new Paragraph({
           children: [
              new TextRun({
                text: line,
-               size: 24 // 12pt
+               size: 24
              })
           ],
-          spacing: {
-            after: 200 // Add a bit of spacing after each line
-          }
+          spacing: { after: 200 }
         })
       });
 
       const doc = new Document({
-        sections: [
-          {
-            properties: {},
-            children: docChildren,
-          },
-        ],
+        sections: [{ properties: {}, children: docChildren }],
       });
 
       const blob = await Packer.toBlob(doc);
@@ -94,12 +82,13 @@ const ToolPdfToWord = () => {
       link.click();
 
     } catch(err) {
-
       alert("Word .docx oluşturulurken hata oldu.");
     } finally {
       setIsProcessing(false);
     }
   };
+
+  const charCount = extractedText.length;
 
   return (
     <div className="flex flex-col gap-6 lg:gap-8 pb-8 animate-in max-w-6xl mx-auto w-full text-[var(--text-main)]">
@@ -109,18 +98,19 @@ const ToolPdfToWord = () => {
             <i className="fa-solid fa-arrow-left"></i>
           </button>
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <i className="fa-solid fa-file-export text-[var(--error)]"></i> 
-              PDF'ten Word'e (Metin Çıkartma)
-            </h1>
+            <div className="flex items-center gap-2 mb-0.5">
+              <div className="ev-icon ev-icon-warning ev-icon-sm"><i className="fa-solid fa-file-export"></i></div>
+              <h1 className="text-2xl font-bold text-[var(--text-main)]">PDF'ten Word'e (Metin Çıkartma)</h1>
+            </div>
+            <p className="text-[var(--text-muted)] text-sm" style={{marginLeft:'2.5rem'}}>Kilitli olmayan PDF sayfalarındaki metni Txt/Word olarak çıkartın.</p>
           </div>
         </div>
       </header>
 
-      {/* Warning Alert */}
-      <div className="bg-[var(--warning)]/10 border border-[var(--warning)]/30 p-4 rounded-xl flex items-start gap-3">
-        <i className="fa-solid fa-triangle-exclamation text-[var(--warning)] mt-1"></i>
-        <div className="text-sm">
+      {/* Uyarı */}
+      <div className="tool-alert-warn">
+        <i className="fa-solid fa-triangle-exclamation"></i>
+        <div>
           <strong>Önemli Bilgi:</strong> PDF dosyaları içinde metinler "parçalanmış" kelime öbekleri halinde bulunur. Çıkartılan Word dosyasında (.docx) sadece ham düz metin bulunur, görsel veya tasarımsal ögeler kopyalanamaz. Taranmış fotokopi PDF'leri desteklemez.
         </div>
       </div>
@@ -129,45 +119,91 @@ const ToolPdfToWord = () => {
         
         {!fileName ? (
           <div 
-            className="flex flex-col items-center justify-center p-16 border-2 border-dashed border-[var(--border-color)] rounded-xl bg-[var(--bg-hover)] cursor-pointer hover:border-[var(--error)] transition-colors group"
+            className="tool-drop-zone"
             onClick={() => fileInputRef.current?.click()}
           >
-            <div className="w-16 h-16 rounded-full bg-[var(--error)]/10 text-[var(--error)] flex items-center justify-center text-3xl mb-4 group-hover:-translate-y-2 transition-transform">
+            <div className="tool-drop-zone-icon" style={{background:'hsla(350, 78%, 52%, 0.12)', color:'var(--error)'}}>
               <i className="fa-regular fa-file-pdf"></i>
             </div>
-            <h3 className="text-xl font-bold mb-2">Ayıklanacak .PDF Dosyasını Seçin</h3>
-            <p className="text-[var(--text-muted)] text-center max-w-md mb-4">Bir PDF'teki yazıları kopyalanabilir .docx belgesi haline getirin.</p>
-            <span className="ev-btn ev-btn-primary" style={{backgroundColor: 'var(--error)'}}>PDF Yükle</span>
+            <h3>Ayıklanacak .PDF Dosyasını Seçin</h3>
+            <p>Bir PDF'teki yazıları kopyalanabilir .docx belgesi haline getirin.<br/>
+              <span style={{fontSize:'0.8rem', opacity:0.7}}>Yalnızca metin tabanlı PDF'ler desteklenir</span>
+            </p>
+            <span className="ev-btn" style={{backgroundColor:'var(--error)', color:'white', border:'none', marginTop:'0.5rem'}}>
+              <i className="fa-solid fa-folder-open"></i> PDF Yükle
+            </span>
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
-            <div className="flex justify-between items-center p-4 bg-[var(--bg-hover)] border border-[var(--border-color)] rounded-xl">
-              <div className="flex items-center gap-3">
-                <i className="fa-solid fa-file-lines text-2xl text-[var(--error)]"></i>
-                <div className="max-w-[150px] sm:max-w-xs md:max-w-sm">
-                  <h4 className="font-bold truncate" title={fileName}>{fileName}</h4>
-                  <span className="text-xs text-[var(--success)] font-bold"><i className="fa-solid fa-check"></i> {extractedText.length} Karakter Bulundu</span>
+          <div style={{display:'flex', flexDirection:'column', gap:'1.25rem'}}>
+            <div style={{
+              display:'flex', justifyContent:'space-between', alignItems:'center',
+              padding:'0.875rem 1.25rem',
+              background:'var(--bg-hover)', border:'1.5px solid var(--border-color)',
+              borderRadius:'var(--radius-lg)', flexWrap:'wrap', gap:'0.75rem'
+            }}>
+              <div style={{display:'flex', alignItems:'center', gap:'0.875rem'}}>
+                <div className="ev-icon ev-icon-error">
+                  <i className="fa-solid fa-file-lines"></i>
+                </div>
+                <div>
+                  <h4 style={{
+                    fontWeight:700, color:'var(--text-main)',
+                    maxWidth:'240px', overflow:'hidden',
+                    textOverflow:'ellipsis', whiteSpace:'nowrap'
+                  }} title={fileName}>{fileName}</h4>
+                  {isProcessing ? (
+                    <span style={{fontSize:'0.75rem', color:'var(--text-muted)', fontWeight:600}}>
+                      <i className="fa-solid fa-spinner fa-spin" style={{marginRight:'0.3rem'}}></i>Metin okunuyor...
+                    </span>
+                  ) : (
+                    <span style={{fontSize:'0.75rem', color:'var(--success)', fontWeight:700}}>
+                      <i className="fa-solid fa-check" style={{marginRight:'0.3rem'}}></i>
+                      {charCount.toLocaleString()} karakter bulundu
+                    </span>
+                  )}
                 </div>
               </div>
-              <div className="flex gap-2 shrink-0">
+              <div style={{display:'flex', gap:'0.625rem', flexShrink:0}}>
                 <button onClick={() => { setFileName(''); setExtractedText(''); }} className="ev-btn ev-btn-ghost">
-                  İptal
+                  <i className="fa-solid fa-xmark"></i> İptal
                 </button>
-                <button onClick={handleDownload} disabled={isProcessing} className="ev-btn ev-btn-primary" style={{backgroundColor: 'var(--error)'}}>
-                  {isProcessing ? <><i className="fa-solid fa-spinner fa-spin"></i> Dosya Hazırlanıyor</> : <><i className="fa-solid fa-download"></i> Word (Docx) İndir</>}
+                <button 
+                  onClick={handleDownload} 
+                  disabled={isProcessing || !extractedText} 
+                  className="ev-btn ev-btn-primary"
+                  style={{backgroundColor:'var(--error)'}}
+                >
+                  {isProcessing 
+                    ? <><i className="fa-solid fa-spinner fa-spin"></i> Hazırlanıyor</>
+                    : <><i className="fa-solid fa-download"></i> Word (Docx) İndir</>
+                  }
                 </button>
               </div>
             </div>
-            
-            <div className="bg-[var(--bg-surface)] p-6 rounded-xl border border-[var(--border-color)] w-full">
-               <h3 className="text-[var(--primary)] font-bold mb-3 flex items-center gap-2"><i className="fa-solid fa-magnifying-glass"></i> Okunan Çıktı Önizlemesi</h3>
-               <textarea
-                 className="w-full h-64 p-4 rounded-lg bg-[var(--bg-hover)] border border-[var(--border-color)] resize-none text-sm text-[var(--text-muted)]"
-                 readOnly
-                 value={extractedText}
-                 placeholder="Bu belgede seçilebilen hiçbir dijital metin bulunamadı."
-               />
-            </div>
+
+            {isProcessing && !extractedText ? (
+              <div className="tool-processing">
+                <i className="fa-solid fa-spinner tool-processing-spinner" style={{color:'var(--error)'}}></i>
+                <span className="tool-processing-text">PDF sayfaları okunuyor...</span>
+              </div>
+            ) : (
+              <div style={{display:'flex', flexDirection:'column', gap:'0.625rem'}}>
+                <div style={{
+                  display:'flex', alignItems:'center', gap:'0.5rem',
+                  fontSize:'0.8rem', fontWeight:700, color:'var(--primary)'
+                }}>
+                  <i className="fa-solid fa-magnifying-glass"></i>
+                  Okunan Çıktı Önizlemesi
+                </div>
+                <textarea
+                  className="tool-text-preview"
+                  style={{height:'15rem'}}
+                  readOnly
+                  value={extractedText}
+                  placeholder="Bu belgede seçilebilen hiçbir dijital metin bulunamadı."
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -176,7 +212,7 @@ const ToolPdfToWord = () => {
           accept=".pdf" 
           ref={fileInputRef} 
           onChange={handleFileChange} 
-          className="hidden" 
+          style={{display:'none'}} 
         />
       </div>
     </div>
