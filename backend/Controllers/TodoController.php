@@ -56,10 +56,10 @@ class TodoController {
         try {
             $pdo = Database::getConnection();
             $stmt = $pdo->prepare(
-                "INSERT INTO todos (title, description, status, creator_id, assigned_to, target_date, priority) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO todos (title, description, status, creator_id, assigned_to, target_date, priority, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
             );
-            
+
             $status = $data['status'] ?? 'todo';
             if (!in_array($status, ['todo', 'in_progress', 'done'])) {
                 $status = 'todo';
@@ -72,7 +72,8 @@ class TodoController {
                 $user['user_id'],
                 $data['assigned_to'] ?? $user['user_id'], // Default assign to self
                 empty($data['target_date']) ? null : $data['target_date'],
-                $data['priority'] ?? 'medium'
+                $data['priority'] ?? 'medium',
+                empty($data['created_at']) ? date('Y-m-d H:i:s') : $data['created_at']
             ]);
             
             $newId = $pdo->lastInsertId();
@@ -124,6 +125,10 @@ class TodoController {
             if (isset($data['target_date'])) {
                 $fields[] = 'target_date = ?';
                 $params[] = empty($data['target_date']) ? null : $data['target_date'];
+            }
+            if (!empty($data['created_at'])) {
+                $fields[] = 'created_at = ?';
+                $params[] = $data['created_at'];
             }
             if (isset($data['priority']) && in_array($data['priority'], ['low', 'medium', 'high'])) {
                 $fields[] = 'priority = ?';

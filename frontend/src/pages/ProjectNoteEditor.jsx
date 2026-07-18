@@ -5,6 +5,7 @@ import ReactQuill from 'react-quill-new';
 import 'quill/dist/quill.snow.css';
 
 const DiagramEditor = React.lazy(() => import('../components/DiagramEditor'));
+const authHeaders = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
 // A note's `content` column stores a JSON envelope { html, diagram } so a single
 // note can hold both a rich-text body and a diagram on one page. Older rows
@@ -29,10 +30,10 @@ const parseNote = (raw) => {
   return { html, diagram, initialTab: 'text' };
 };
 
-const NoteEditor = () => {
-  const { id } = useParams();
+const ProjectNoteEditor = () => {
+  const { projectId, noteId } = useParams();
   const navigate = useNavigate();
-  const isNew = id === 'new';
+  const isNew = noteId === 'new';
   const [title, setTitle] = useState('');
   const [contentHtml, setContentHtml] = useState('');
   const [diagramInitial, setDiagramInitial] = useState(null);
@@ -42,22 +43,15 @@ const NoteEditor = () => {
   const [savedOk, setSavedOk] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
   const isDiagramTab = activeTab === 'diagram';
-  // Excalidraw scene updates fire on every pointer move; routing them through
-  // React state (re-rendering the controlled Excalidraw instance) causes an
-  // infinite update loop. Keep the live scene in a ref and only read it on save.
   const diagramSceneRef = useRef(null);
 
   useEffect(() => {
-    if (!isNew) {
-      fetchNote();
-    }
-  }, [id]);
+    if (!isNew) fetchNote();
+  }, [noteId]);
 
   const fetchNote = async () => {
     try {
-      const res = await axios.get(`/api/notes/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      const res = await axios.get(`/api/projects/${projectId}/notes/${noteId}`, authHeaders());
       const { html, diagram, initialTab } = parseNote(res.data.note);
       setTitle(res.data.note.title || '');
       setContentHtml(html);
@@ -65,46 +59,29 @@ const NoteEditor = () => {
       setActiveTab(initialTab);
       diagramSceneRef.current = null;
       setLastSaved(new Date());
-    } catch(err) {
-      if (err.response?.status === 404) navigate('/dashboard/notes');
+    } catch (err) {
+      if (err.response?.status === 404) navigate(`/dashboard/projects/${projectId}`);
     } finally { setLoading(false); }
   };
 
   const handleSave = async (auto = false) => {
-    if(!auto) setSaving(true);
+    if (!auto) setSaving(true);
     const diagram = diagramSceneRef.current != null ? diagramSceneRef.current : diagramInitial;
     const content = JSON.stringify({ html: contentHtml, diagram });
     try {
       if (isNew) {
-        // Create new note
-        const res = await axios.post('/api/notes', {
-          title: title || 'İsimsiz Not',
-          content,
-          type: 'text'
-        }, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        if (res.data.id) {
-          navigate(`/dashboard/notes/${res.data.id}`, { replace: true });
-        }
+        const res = await axios.post(`/api/projects/${projectId}/notes`, {
+          title: title || 'İsimsiz Not', content, type: 'text'
+        }, authHeaders());
+        if (res.data.id) navigate(`/dashboard/projects/${projectId}/notes/${res.data.id}`, { replace: true });
       } else {
-        // Update existing note — send only title and content
-        await axios.put(`/api/notes/${id}`, {
-          title,
-          content
-        }, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
+        await axios.put(`/api/projects/${projectId}/notes/${noteId}`, { title, content }, authHeaders());
       }
       setLastSaved(new Date());
-      if(!auto) {
-        setSavedOk(true);
-        setTimeout(() => setSavedOk(false), 2000);
-      }
-    } catch(err) {
-
+      if (!auto) { setSavedOk(true); setTimeout(() => setSavedOk(false), 2000); }
+    } catch (err) {
     } finally {
-      if(!auto) setSaving(false);
+      if (!auto) setSaving(false);
     }
   };
 
@@ -113,7 +90,7 @@ const NoteEditor = () => {
       [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
       [{ 'color': [] }, { 'background': [] }],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
       ['blockquote', 'code-block'],
       ['link', 'clean']
     ]
@@ -123,55 +100,32 @@ const NoteEditor = () => {
 
   return (
     <div className={`note-editor-root animate-in${isDiagramTab ? ' note-editor-root-diagram' : ''}`}>
-
-      {/* Premium Top Bar */}
       <header className="note-editor-topbar">
         <div className="note-editor-breadcrumb">
-          <button
-            onClick={() => navigate('/dashboard/notes')}
-            className="note-editor-back-btn"
-            title="Notlara Dön"
-          >
-            <i className="fa-solid fa-arrow-left"></i>
-            <span>Notlarım</span>
+          <button onClick={() => navigate(`/dashboard/projects/${projectId}`)} className="note-editor-back-btn" title="Projeye Dön">
+            <i className="fa-solid fa-arrow-left"></i><span>Proje</span>
           </button>
           <span className="note-editor-breadcrumb-sep">/</span>
           <i className="fa-solid fa-note-sticky text-primary" style={{ fontSize: '0.8rem' }}></i>
           <span className="note-editor-breadcrumb-title">{isNew ? 'Yeni Not' : (title || 'İsimsiz')}</span>
         </div>
-
         <div className="note-editor-actions">
           {lastSaved && (
             <div className="note-editor-save-status">
               <i className="fa-solid fa-clock-rotate-left"></i>
-              <span>Son kayıt {lastSaved.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+              <span>Son kayıt {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
           )}
-          <button
-            onClick={() => handleSave(false)}
-            disabled={saving}
-            className="ev-btn ev-btn-primary ev-btn-sm"
-          >
+          <button onClick={() => handleSave(false)} disabled={saving} className="ev-btn ev-btn-primary ev-btn-sm">
             {saving ? <i className="fa-solid fa-spinner fa-spin"></i> : savedOk ? <i className="fa-solid fa-circle-check"></i> : <i className="fa-solid fa-floppy-disk"></i>}
             <span>{savedOk ? 'Kaydedildi!' : (isNew ? 'Oluştur' : 'Kaydet')}</span>
           </button>
         </div>
       </header>
 
-      {/* Editor Canvas */}
       <div className={`note-editor-canvas${isDiagramTab ? ' note-editor-canvas-diagram' : ''}`}>
-
-        {/* Title Input */}
-        <input
-          type="text"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          placeholder="Not Başlığı"
-          className="note-editor-title-input"
-          autoFocus={isNew}
-        />
-
-        {/* Divider */}
+        <input type="text" value={title} onChange={e => setTitle(e.target.value)}
+          placeholder="Not Başlığı" className="note-editor-title-input" autoFocus={isNew} />
         <div className="note-editor-divider"></div>
 
         {/* Metin / Şema switcher — both live under the same note */}
@@ -187,13 +141,8 @@ const NoteEditor = () => {
         </div>
 
         {isDiagramTab ? (
-          /* Draw.io-style diagram canvas — shapes, arrows, freehand text */
           <div className="note-editor-diagram-wrapper">
-            <Suspense fallback={
-              <div className="flex items-center justify-center" style={{ height: '100%' }}>
-                <i className="fa-solid fa-spinner fa-spin w-8 h-8 text-primary"></i>
-              </div>
-            }>
+            <Suspense fallback={<div className="flex items-center justify-center" style={{ height: '100%' }}><i className="fa-solid fa-spinner fa-spin w-8 h-8 text-primary"></i></div>}>
               <DiagramEditor
                 content={diagramSceneRef.current != null ? diagramSceneRef.current : diagramInitial}
                 sceneRef={diagramSceneRef}
@@ -201,21 +150,14 @@ const NoteEditor = () => {
             </Suspense>
           </div>
         ) : (
-          /* Rich Text ReactQuill */
           <div className="quill-premium-wrapper note-editor-quill-wrapper">
-            <ReactQuill
-              theme="snow"
-              value={contentHtml}
-              onChange={setContentHtml}
-              modules={modules}
-              placeholder="Bir şeyler yazın veya '/' tıklayarak biçimlendirin..."
-            />
+            <ReactQuill theme="snow" value={contentHtml} onChange={setContentHtml}
+              modules={modules} placeholder="Bir şeyler yazın veya '/' tıklayarak biçimlendirin..." />
           </div>
         )}
       </div>
-
     </div>
   );
 };
 
-export default NoteEditor;
+export default ProjectNoteEditor;

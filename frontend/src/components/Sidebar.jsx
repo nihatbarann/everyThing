@@ -99,8 +99,12 @@ const Sidebar = ({ isOpen, onClose }) => {
       case 'globe':        
       case 'Vault':        return <i className="fa-solid fa-vault"></i>;
       case 'megaphone':    return <i className="fa-solid fa-bullhorn"></i>;
+      case 'Projects':     return <i className="fa-solid fa-diagram-project"></i>;
+      case 'Tickets':      return <i className="fa-solid fa-ticket"></i>;
       case 'bell':         return <i className="fa-solid fa-bell"></i>;
       case 'wrench':       return <i className="fa-solid fa-wrench"></i>;
+      case 'Certificates': return <i className="fa-solid fa-certificate"></i>;
+      case 'Monitors':     return <i className="fa-solid fa-tower-broadcast"></i>;
       default:             return <i className="fa-solid fa-house"></i>;
     }
   };

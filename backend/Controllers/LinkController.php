@@ -14,7 +14,7 @@ class LinkController {
         $user = $this->requireAuth();
         try {
             $pdo = Database::getConnection();
-            $stmt = $pdo->prepare("SELECT * FROM links WHERE user_id = ? ORDER BY title ASC");
+            $stmt = $pdo->prepare("SELECT * FROM links WHERE user_id = ? ORDER BY is_favorite DESC, title ASC");
             $stmt->execute([$user['user_id']]);
             echo json_encode(['links' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
         } catch (Exception $e) {
@@ -28,15 +28,17 @@ class LinkController {
         $data = json_decode(file_get_contents('php://input'), true);
         
         $title = trim($data['title'] ?? 'Yeni Link');
+        $category = trim($data['category'] ?? '') ?: null;
         $url = trim($data['url'] ?? '');
         $username = $data['username'] ?? '';
         $password = $data['password'] ?? '';
         $notes = $data['notes'] ?? '';
+        $isFavorite = !empty($data['is_favorite']) ? 1 : 0;
 
         try {
             $pdo = Database::getConnection();
-            $stmt = $pdo->prepare("INSERT INTO links (user_id, title, url, username, password, notes) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$user['user_id'], $title, $url, $username, $password, $notes]);
+            $stmt = $pdo->prepare("INSERT INTO links (user_id, title, category, url, username, password, notes, is_favorite) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$user['user_id'], $title, $category, $url, $username, $password, $notes, $isFavorite]);
             
             $newId = $pdo->lastInsertId();
             ActivityLogController::log($user['user_id'], $user['username'], 'link.create', "Created link \"{$title}\"", 'link', $newId);
@@ -61,13 +63,15 @@ class LinkController {
                 return;
             }
 
-            $stmt = $pdo->prepare("UPDATE links SET title=?, url=?, username=?, password=?, notes=? WHERE id=?");
+            $stmt = $pdo->prepare("UPDATE links SET title=?, category=?, url=?, username=?, password=?, notes=?, is_favorite=? WHERE id=?");
             $stmt->execute([
                 trim($data['title'] ?? ''),
+                trim($data['category'] ?? '') ?: null,
                 trim($data['url'] ?? ''),
                 $data['username'] ?? '',
                 $data['password'] ?? '',
                 $data['notes'] ?? '',
+                !empty($data['is_favorite']) ? 1 : 0,
                 $id
             ]);
             

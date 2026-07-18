@@ -86,3 +86,60 @@ $router->get('/api/activity-logs', 'ActivityLogController@index');
 
 // Menu Order (per-user)
 $router->post('/api/menus/order', 'MenuController@saveOrder');
+
+// Projects
+$router->get('/api/projects', 'ProjectController@index');
+$router->post('/api/projects', 'ProjectController@create');
+$router->get('/api/projects/{id}', 'ProjectController@show');
+$router->put('/api/projects/{id}', 'ProjectController@update');
+$router->delete('/api/projects/{id}', 'ProjectController@delete');
+$router->post('/api/projects/{id}/members', 'ProjectController@addMember');
+$router->delete('/api/projects/{id}/members/{userId}', 'ProjectController@removeMember');
+
+// Project Notes (text & diagram)
+$router->get('/api/projects/{projectId}/notes', 'ProjectNoteController@index');
+$router->post('/api/projects/{projectId}/notes', 'ProjectNoteController@create');
+$router->get('/api/projects/{projectId}/notes/{id}', 'ProjectNoteController@show');
+$router->put('/api/projects/{projectId}/notes/{id}', 'ProjectNoteController@update');
+$router->delete('/api/projects/{projectId}/notes/{id}', 'ProjectNoteController@delete');
+
+// Project Links (vault)
+$router->get('/api/projects/{projectId}/links', 'ProjectLinkController@index');
+$router->post('/api/projects/{projectId}/links', 'ProjectLinkController@create');
+$router->put('/api/projects/{projectId}/links/{id}', 'ProjectLinkController@update');
+$router->delete('/api/projects/{projectId}/links/{id}', 'ProjectLinkController@delete');
+
+// Project Todos (kanban)
+$router->get('/api/projects/{projectId}/todos', 'ProjectTodoController@index');
+$router->post('/api/projects/{projectId}/todos', 'ProjectTodoController@create');
+$router->put('/api/projects/{projectId}/todos/{id}', 'ProjectTodoController@update');
+$router->put('/api/projects/{projectId}/todos/{id}/status', 'ProjectTodoController@updateStatus');
+$router->delete('/api/projects/{projectId}/todos/{id}', 'ProjectTodoController@delete');
+
+// Certificates / Domain expiry tracking
+$router->get('/api/certificates', 'CertificateController@index');
+$router->post('/api/certificates', 'CertificateController@create');
+$router->put('/api/certificates/{id}', 'CertificateController@update');
+$router->delete('/api/certificates/{id}', 'CertificateController@delete');
+$router->post('/api/certificates/{id}/check', 'CertificateController@check');
+
+// Device / network monitoring (switches, APs, modems, cameras, ...)
+$router->get('/api/monitors', 'MonitorController@index');
+$router->post('/api/monitors', 'MonitorController@create');
+$router->post('/api/monitors/check-all', 'MonitorController@checkAll');
+$router->put('/api/monitors/{id}', 'MonitorController@update');
+$router->delete('/api/monitors/{id}', 'MonitorController@delete');
+$router->post('/api/monitors/{id}/check', 'MonitorController@check');
+
+// Tickets (peer-to-peer daily task assignment)
+$router->get('/api/tickets/archived', 'TicketController@archived');
+$router->get('/api/tickets', 'TicketController@index');
+$router->post('/api/tickets', 'TicketController@create');
+$router->get('/api/tickets/{id}', 'TicketController@show');
+$router->put('/api/tickets/{id}', 'TicketController@update');
+$router->delete('/api/tickets/{id}', 'TicketController@delete');
+$router->put('/api/tickets/{id}/complete', 'TicketController@complete');
+$router->post('/api/tickets/{id}/extension', 'TicketController@requestExtension');
+$router->put('/api/tickets/{id}/extension/respond', 'TicketController@respondExtension');
+$router->post('/api/tickets/{id}/comments', 'TicketController@addComment');
+$router->put('/api/tickets/{id}/reassign', 'TicketController@reassign');

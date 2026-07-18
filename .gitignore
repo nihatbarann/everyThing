@@ -12,6 +12,9 @@ backend/config/install.lock
 # System config (theme, etc.) — user-specific
 backend/config/system.json
 
+# Auto-generated JWT signing secret (unique per installation)
+backend/config/jwt_secret.php
+
 # PHP error logs
 *.log
 error_log

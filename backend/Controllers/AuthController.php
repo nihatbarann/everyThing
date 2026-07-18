@@ -1,17 +1,14 @@
 <?php
 
 require_once __DIR__ . '/ActivityLogController.php';
+require_once __DIR__ . '/../Core/Secret.php';
 
 class AuthController {
-    
+
     private $secretKey;
 
     public function __construct() {
-        $secret = getenv('JWT_SECRET');
-        if (!$secret || strlen($secret) < 32) {
-            $secret = 'EveryThing_Dev_Secret_Change_This_In_Production_Please_Min32';
-        }
-        $this->secretKey = $secret;
+        $this->secretKey = Secret::jwt();
     }
 
     public function login() {

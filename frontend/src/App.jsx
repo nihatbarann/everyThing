@@ -16,6 +16,13 @@ import MyProfile from './pages/MyProfile';
 import NotesDashboard from './pages/NotesDashboard';
 import NoteEditor from './pages/NoteEditor';
 import LinksDashboard from './pages/LinksDashboard';
+import ProjectsDashboard from './pages/ProjectsDashboard';
+import ProjectDetail from './pages/ProjectDetail';
+import ProjectNoteEditor from './pages/ProjectNoteEditor';
+import TicketsDashboard from './pages/TicketsDashboard';
+import ArchivedTickets from './pages/ArchivedTickets';
+import CertificatesDashboard from './pages/CertificatesDashboard';
+import MonitorsDashboard from './pages/MonitorsDashboard';
 import Announcements from './pages/Announcements';
 import AnnouncementView from './pages/AnnouncementView';
 import AnnouncementForm from './pages/AnnouncementForm';
@@ -108,6 +115,13 @@ function App() {
               <Route path="notes" element={<NotesDashboard />} />
               <Route path="notes/:id" element={<NoteEditor />} />
               <Route path="links" element={<ErrorBoundary><LinksDashboard /></ErrorBoundary>} />
+              <Route path="projects" element={<ErrorBoundary><ProjectsDashboard /></ErrorBoundary>} />
+              <Route path="projects/:projectId" element={<ErrorBoundary><ProjectDetail /></ErrorBoundary>} />
+              <Route path="projects/:projectId/notes/:noteId" element={<ErrorBoundary><ProjectNoteEditor /></ErrorBoundary>} />
+              <Route path="tickets" element={<ErrorBoundary><TicketsDashboard /></ErrorBoundary>} />
+              <Route path="tickets/archived" element={<ErrorBoundary><ArchivedTickets /></ErrorBoundary>} />
+              <Route path="certificates" element={<ErrorBoundary><CertificatesDashboard /></ErrorBoundary>} />
+              <Route path="monitors" element={<ErrorBoundary><MonitorsDashboard /></ErrorBoundary>} />
               <Route path="announcements" element={<ErrorBoundary><Announcements /></ErrorBoundary>} />
               <Route path="announcements/create" element={<ErrorBoundary><AnnouncementForm /></ErrorBoundary>} />
               <Route path="announcements/:id" element={<ErrorBoundary><AnnouncementView /></ErrorBoundary>} />

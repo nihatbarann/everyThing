@@ -23,7 +23,8 @@ const Todos = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [newTask, setNewTask] = useState({ description: '', target_date: '', status: 'todo', priority: 'medium' });
+  const todayStr = () => new Date().toISOString().split('T')[0];
+  const [newTask, setNewTask] = useState({ title: '', description: '', created_at: todayStr(), target_date: '', status: 'todo', priority: 'medium' });
 
   useEffect(() => {
     fetchTodos();
@@ -147,8 +148,8 @@ const Todos = () => {
   // Task Creation / Update
   const handleSaveTask = async (e) => {
     e.preventDefault();
-    if (!newTask.description.trim()) return;
-    
+    if (!newTask.title.trim()) return;
+
     setSaving(true);
     try {
       if (editingTask) {
@@ -162,7 +163,7 @@ const Todos = () => {
       }
       setShowModal(false);
       setEditingTask(null);
-      setNewTask({ description: '', target_date: '', status: 'todo', priority: 'medium' });
+      setNewTask({ title: '', description: '', created_at: todayStr(), target_date: '', status: 'todo', priority: 'medium' });
       fetchTodos();
     } catch (err) {
       setError(`Failed to ${editingTask ? 'update' : 'create'} task.`);
@@ -175,7 +176,9 @@ const Todos = () => {
   const openEditModal = (task) => {
     setEditingTask(task);
     setNewTask({
+      title: task.title || '',
       description: task.description || '',
+      created_at: task.created_at ? task.created_at.split(' ')[0] : todayStr(),
       target_date: task.target_date ? task.target_date.split(' ')[0] : '', // Extract YYYY-MM-DD
       status: task.status,
       priority: task.priority || 'medium'
@@ -186,7 +189,7 @@ const Todos = () => {
   const closePortal = () => {
     setShowModal(false);
     setEditingTask(null);
-    setNewTask({ description: '', target_date: '', status: 'todo', priority: 'medium' });
+    setNewTask({ title: '', description: '', created_at: todayStr(), target_date: '', status: 'todo', priority: 'medium' });
   };
 
   // Task Archiving
@@ -245,14 +248,14 @@ const Todos = () => {
         </div>
         
         <div className="flex-1 max-w-md px-4">
-          <div className="um-search-box !bg-white/5 border border-white/10 hover:border-primary/30 focus-within:border-primary/50 transition-all">
+          <div className="um-search-box">
             <i className="fa-solid fa-magnifying-glass" style={{ color: 'var(--text-muted)' }}></i>
-            <input 
-              type="text" 
-              placeholder="Görevlerde ara..." 
+            <input
+              type="text"
+              placeholder="Görevlerde ara..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="um-search-input !text-[var(--text-main)]"
+              className="um-search-input"
             />
           </div>
         </div>
@@ -282,87 +285,84 @@ const Todos = () => {
       ) : (
         <div className="flex-1 grid-container grid-cols-3" style={{ minWidth: '900px', overflowX: 'auto', minHeight: 0 }}>
           
-          {/* TO DO COLUMN (Yapılacak - Green) */}
-          <div 
-            className="flex flex-col rounded-2xl bg-[hsla(150,80%,40%,0.15)] border border-[hsla(150,80%,40%,0.35)] overflow-hidden delay-1"
+          {/* TO DO COLUMN */}
+          <div
+            className="kanban-column delay-1"
+            style={{ '--col-color': 'var(--primary)' }}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, 'todo')}
           >
-            <div className="p-4 border-b border-[hsla(150,80%,40%,0.25)] bg-[hsla(150,80%,40%,0.2)] flex items-center justify-between">
-              <h2 className="font-bold flex items-center gap-2 text-[#2ecc71]">
-                <i className="fa-solid fa-circle-dot w-5 h-5"></i> Yapılacak
-              </h2>
-              <span className="badge positive bg-[#2ecc71] text-white border-none">{todos.todo.length}</span>
+            <div className="kanban-column-header">
+              <h2><i className="fa-solid fa-circle-dot"></i> Yapılacak</h2>
+              <span className="kanban-column-count">{todos.todo.length}</span>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 um-kanban-column">
-              {todos.todo.filter(t => 
-                t.description.toLowerCase().includes(searchQuery.toLowerCase())
+            <div className="kanban-column-body">
+              {todos.todo.filter(t =>
+                ((t.title || '') + ' ' + (t.description || '')).toLowerCase().includes(searchQuery.toLowerCase())
               ).map(task => (
-                <TaskCard 
-                  key={task.id} task={task} listId="todo" 
-                  onDragStart={handleDragStart} onDragEnd={handleDragEnd} 
+                <TaskCard
+                  key={task.id} task={task} listId="todo"
+                  onDragStart={handleDragStart} onDragEnd={handleDragEnd}
                   onDelete={handleDeleteTask} onArchive={handleArchiveTask}
                   onEdit={openEditModal}
                   isOverdue={isOverdue} formatDate={formatDate}
                 />
               ))}
-              {todos.todo.length === 0 && <div className="text-muted text-sm text-center py-8">Görev yok</div>}
+              {todos.todo.length === 0 && <div className="kanban-column-empty">Görev yok</div>}
             </div>
           </div>
 
-          {/* IN PROGRESS COLUMN (Yapılıyor - Yellow) */}
-          <div 
-            className="flex flex-col rounded-2xl bg-[hsla(45,100%,45%,0.15)] border border-[hsla(45,100%,45%,0.35)] overflow-hidden delay-2"
+          {/* IN PROGRESS COLUMN */}
+          <div
+            className="kanban-column delay-2"
+            style={{ '--col-color': 'var(--warning)' }}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, 'in_progress')}
           >
-            <div className="p-4 border-b border-[hsla(45,100%,45%,0.25)] bg-[hsla(45,100%,45%,0.2)] flex items-center justify-between">
-              <h2 className="font-bold flex items-center gap-2 text-[#f1c40f]">
-                <i className="fa-solid fa-stopwatch w-5 h-5"></i> Yapılıyor
-              </h2>
-              <span className="badge warning bg-[#f1c40f] text-white border-none">{todos.in_progress.length}</span>
+            <div className="kanban-column-header">
+              <h2><i className="fa-solid fa-stopwatch"></i> Yapılıyor</h2>
+              <span className="kanban-column-count">{todos.in_progress.length}</span>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 um-kanban-column">
-              {todos.in_progress.filter(t => 
-                t.description.toLowerCase().includes(searchQuery.toLowerCase())
+            <div className="kanban-column-body">
+              {todos.in_progress.filter(t =>
+                ((t.title || '') + ' ' + (t.description || '')).toLowerCase().includes(searchQuery.toLowerCase())
               ).map(task => (
-                <TaskCard 
-                  key={task.id} task={task} listId="in_progress" 
-                  onDragStart={handleDragStart} onDragEnd={handleDragEnd} 
+                <TaskCard
+                  key={task.id} task={task} listId="in_progress"
+                  onDragStart={handleDragStart} onDragEnd={handleDragEnd}
                   onDelete={handleDeleteTask} onArchive={handleArchiveTask}
                   onEdit={openEditModal}
                   isOverdue={isOverdue} formatDate={formatDate}
                 />
               ))}
-              {todos.in_progress.length === 0 && <div className="text-muted text-sm text-center py-8">Görev yok</div>}
+              {todos.in_progress.length === 0 && <div className="kanban-column-empty">Görev yok</div>}
             </div>
           </div>
 
-          {/* DONE COLUMN (Yapıldı - Red) */}
-          <div 
-            className="flex flex-col rounded-2xl bg-[hsla(0,80%,50%,0.15)] border border-[hsla(0,80%,50%,0.35)] overflow-hidden delay-3"
+          {/* DONE COLUMN */}
+          <div
+            className="kanban-column delay-3"
+            style={{ '--col-color': 'var(--success)' }}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, 'done')}
           >
-            <div className="p-4 border-b border-[hsla(0,80%,50%,0.25)] bg-[hsla(0,80%,50%,0.2)] flex items-center justify-between">
-              <h2 className="font-bold flex items-center gap-2 text-[#e74c3c]">
-                <i className="fa-solid fa-circle-check w-5 h-5"></i> Yapıldı
-              </h2>
-              <span className="badge negative bg-[#e74c3c] text-white border-none">{todos.done.length}</span>
+            <div className="kanban-column-header">
+              <h2><i className="fa-solid fa-circle-check"></i> Yapıldı</h2>
+              <span className="kanban-column-count">{todos.done.length}</span>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 um-kanban-column">
-              {todos.done.filter(t => 
-                t.description.toLowerCase().includes(searchQuery.toLowerCase())
+            <div className="kanban-column-body">
+              {todos.done.filter(t =>
+                ((t.title || '') + ' ' + (t.description || '')).toLowerCase().includes(searchQuery.toLowerCase())
               ).map(task => (
-                <TaskCard 
-                  key={task.id} task={task} listId="done" 
-                  onDragStart={handleDragStart} onDragEnd={handleDragEnd} 
+                <TaskCard
+                  key={task.id} task={task} listId="done"
+                  onDragStart={handleDragStart} onDragEnd={handleDragEnd}
                   onDelete={handleDeleteTask} onArchive={handleArchiveTask}
                   onEdit={openEditModal}
                   isOverdue={isOverdue} formatDate={formatDate}
                 />
               ))}
-              {todos.done.length === 0 && <div className="text-muted text-sm text-center py-8">Görev yok</div>}
+              {todos.done.length === 0 && <div className="kanban-column-empty">Görev yok</div>}
             </div>
           </div>
 
@@ -375,33 +375,46 @@ const Todos = () => {
             <h3 className="mb-4">{editingTask ? 'Görevi Düzenle' : 'Yeni Görev Ekle'}</h3>
             <form onSubmit={handleSaveTask} className="flex flex-col gap-4">
               <div className="um-field">
-                <label>Görev Açıklaması *</label>
-                <textarea required autoFocus value={newTask.description} rows="4"
-                  onChange={e => setNewTask({...newTask, description: e.target.value})} 
+                <label>Başlık *</label>
+                <input type="text" required autoFocus value={newTask.title}
+                  onChange={e => setNewTask({...newTask, title: e.target.value})}
+                  placeholder="Görev başlığı..." />
+              </div>
+              <div className="um-field">
+                <label>Açıklama</label>
+                <textarea value={newTask.description} rows="4"
+                  onChange={e => setNewTask({...newTask, description: e.target.value})}
                   placeholder="Neler yapılacak?..." />
               </div>
               <div className="two-cols">
                 <div className="um-field">
-                  <label>Hedef Tarih</label>
-                  <input type="date" value={newTask.target_date} 
-                    onChange={e => setNewTask({...newTask, target_date: e.target.value})} />
+                  <label>Oluşturulma Tarihi</label>
+                  <input type="date" value={newTask.created_at}
+                    onChange={e => setNewTask({...newTask, created_at: e.target.value})} />
                 </div>
                 <div className="um-field">
-                  <label>Öncelik</label>
+                  <label>Son Yapılma Tarihi</label>
+                  <input type="date" value={newTask.target_date}
+                    onChange={e => setNewTask({...newTask, target_date: e.target.value})} />
+                </div>
+              </div>
+              <div className="two-cols">
+                <div className="um-field">
+                  <label>Önem Derecesi</label>
                   <select value={newTask.priority} onChange={e => setNewTask({...newTask, priority: e.target.value})}>
                     <option value="low">Düşük</option>
                     <option value="medium">Orta</option>
                     <option value="high">Yüksek</option>
                   </select>
                 </div>
-              </div>
-              <div className="um-field">
-                <label>Durum</label>
-                <select value={newTask.status} onChange={e => setNewTask({...newTask, status: e.target.value})}>
-                  <option value="todo">Yapılacak</option>
-                  <option value="in_progress">Yapılıyor</option>
-                  <option value="done">Yapıldı</option>
-                </select>
+                <div className="um-field">
+                  <label>Durum</label>
+                  <select value={newTask.status} onChange={e => setNewTask({...newTask, status: e.target.value})}>
+                    <option value="todo">Yapılacak</option>
+                    <option value="in_progress">Yapılıyor</option>
+                    <option value="done">Yapıldı</option>
+                  </select>
+                </div>
               </div>
               <div className="um-modal-actions">
                 <button type="button" onClick={closePortal} className="ev-btn ev-btn-secondary">İptal</button>
@@ -423,10 +436,10 @@ const Todos = () => {
 const TaskCard = ({ task, listId, onDragStart, onDragEnd, onDelete, onArchive, onEdit, isOverdue, formatDate }) => {
   const getPriorityInfo = (p) => {
     switch(p) {
-      case 'high': return { label: 'Yüksek', class: 'bg-error/20 text-error border-error/30' };
-      case 'medium': return { label: 'Orta', class: 'bg-warning/20 text-warning border-warning/30' };
-      case 'low': return { label: 'Düşük', class: 'bg-primary/20 text-primary border-primary/30' };
-      default: return { label: 'Orta', class: 'bg-warning/20 text-warning border-warning/30' };
+      case 'high': return { label: 'Yüksek', color: 'var(--error)' };
+      case 'medium': return { label: 'Orta', color: 'var(--warning)' };
+      case 'low': return { label: 'Düşük', color: 'var(--primary)' };
+      default: return { label: 'Orta', color: 'var(--warning)' };
     }
   };
 
@@ -434,13 +447,13 @@ const TaskCard = ({ task, listId, onDragStart, onDragEnd, onDelete, onArchive, o
 
   let highlightClass = '';
   if (task.status === 'done') {
-    highlightClass = 'overdue'; // Red permanently for done
+    highlightClass = 'card-done';
   } else if (isOverdue(task.target_date)) {
-    highlightClass = 'overdue'; // Red for overdue/today
+    highlightClass = 'overdue'; // still open but past its date
   } else if (task.status === 'in_progress') {
-    highlightClass = 'card-in-progress'; // Yellow for in-progress
+    highlightClass = 'card-in-progress';
   } else if (task.status === 'todo') {
-    highlightClass = 'card-todo'; // Green for to-do
+    highlightClass = 'card-todo';
   }
 
   return (
@@ -451,9 +464,17 @@ const TaskCard = ({ task, listId, onDragStart, onDragEnd, onDelete, onArchive, o
       className={`um-kanban-card group relative overflow-hidden flex flex-col gap-2 ${highlightClass}`}
     >
       <div className="flex-1">
-        <p className="text-xs text-[var(--text-main)] leading-relaxed whitespace-pre-wrap line-clamp-4">
-          {task.description}
-        </p>
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <h4 className="text-sm font-bold text-[var(--text-main)] leading-snug">{task.title || 'İsimsiz Görev'}</h4>
+          <span className="priority-badge" style={{ '--badge-color': priority.color }}>
+            {priority.label}
+          </span>
+        </div>
+        {!!task.description && (
+          <p className="text-xs text-muted leading-relaxed whitespace-pre-wrap line-clamp-4">
+            {task.description}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center justify-between mt-1 pt-2 border-t border-[var(--glass-border)]">
@@ -468,9 +489,7 @@ const TaskCard = ({ task, listId, onDragStart, onDragEnd, onDelete, onArchive, o
            </div>
         </div>
 
-        {/* Horizontal Action Buttons */}
-        {/* Horizontal Action Boxes */}
-        <div className="flex items-center gap-1.5 shrink-0 bg-black/30 p-1.5 rounded-xl border border-white/5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+        <div className="kanban-card-actions">
           <div 
             onClick={() => onEdit(task)}
             className="ev-icon ev-icon-sm ev-icon-action"

@@ -8,7 +8,10 @@ const InstallationWizard = ({ onInstallSuccess }) => {
     db_port: '3306',
     db_name: 'everything_db',
     db_user: 'root',
-    db_password: ''
+    db_password: '',
+    admin_username: '',
+    admin_password: '',
+    admin_password_confirm: ''
   });
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -17,7 +20,7 @@ const InstallationWizard = ({ onInstallSuccess }) => {
 
   const handleChange = (e) => {
     setFormData({...formData, [e.target.name]: e.target.value});
-    setTestSuccess(null); 
+    setTestSuccess(null);
   };
 
   const handleTestConnection = async () => {
@@ -38,8 +41,18 @@ const InstallationWizard = ({ onInstallSuccess }) => {
 
   const handleInstall = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+
+    if (formData.admin_password !== formData.admin_password_confirm) {
+      setError('Yönetici şifreleri birbiriyle eşleşmiyor.');
+      return;
+    }
+    if (formData.admin_password.length < 6) {
+      setError('Yönetici şifresi en az 6 karakter olmalıdır.');
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await axios.post('/api/install/setup', formData);
       if(res.data.success) {
@@ -61,14 +74,11 @@ const InstallationWizard = ({ onInstallSuccess }) => {
       <div className="card max-w-md w-full p-8 animate-fade-in z-10">
         <div className="text-center mb-8 animate-fade-in stagger-1 opacity-0">
           <div className="flex justify-center mb-5">
-            <div className="relative">
-              <div className="absolute inset-0 bg-blue-500 blur-xl opacity-40 rounded-full animate-pulse"></div>
-              <div className="p-4 bg-slate-800/80 rounded-2xl border border-slate-700/50 relative z-10 shadow-xl">
-                <i className="fa-solid fa-database w-10 h-10 text-blue-400 flex items-center justify-center"></i>
-              </div>
+            <div className="ev-icon ev-icon-lg ev-icon-primary">
+              <i className="fa-solid fa-database"></i>
             </div>
           </div>
-          <h1 className="text-3xl mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">System Setup</h1>
+          <h1 className="text-3xl mb-2 text-gradient">System Setup</h1>
           <p className="text-muted text-sm">Configure your MySQL connection</p>
         </div>
 
@@ -115,18 +125,70 @@ const InstallationWizard = ({ onInstallSuccess }) => {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6 animate-fade-in stagger-3 opacity-0">
-              <button 
-                type="button" 
-                className="btn btn-secondary w-1/2" 
-                onClick={handleTestConnection} 
+            <div className="flex gap-3 mt-2 mb-2 animate-fade-in stagger-3 opacity-0">
+              <button
+                type="button"
+                className="btn btn-secondary w-full"
+                onClick={handleTestConnection}
                 disabled={testing || loading}
               >
-                {testing ? <i className="fa-solid fa-spinner fa-spin w-5 h-5"></i> : 'Test Context'}
+                {testing ? <i className="fa-solid fa-spinner fa-spin w-5 h-5"></i> : 'Bağlantıyı Test Et'}
               </button>
-              <button type="submit" className="btn w-1/2" disabled={loading || testing}>
+            </div>
+
+            <div style={{ borderTop: '1px dashed var(--glass-border)', margin: '1.25rem 0' }}></div>
+
+            <div className="mb-4" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-subtle)' }}>
+              <i className="fa-solid fa-user-shield" style={{ color: 'var(--primary)' }}></i>
+              Yönetici Hesabınız
+            </div>
+
+            <div className="form-group">
+              <label>Kullanıcı Adı</label>
+              <input
+                type="text"
+                name="admin_username"
+                value={formData.admin_username}
+                onChange={handleChange}
+                placeholder="ör. ahmet.yilmaz"
+                autoComplete="off"
+                required
+                minLength={3}
+              />
+            </div>
+
+            <div className="two-cols">
+              <div className="form-group mb-0">
+                <label>Şifre</label>
+                <input
+                  type="password"
+                  name="admin_password"
+                  value={formData.admin_password}
+                  onChange={handleChange}
+                  placeholder="En az 6 karakter"
+                  autoComplete="new-password"
+                  required
+                  minLength={6}
+                />
+              </div>
+              <div className="form-group mb-0">
+                <label>Şifre (Tekrar)</label>
+                <input
+                  type="password"
+                  name="admin_password_confirm"
+                  value={formData.admin_password_confirm}
+                  onChange={handleChange}
+                  placeholder="Tekrar girin"
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6 animate-fade-in stagger-3 opacity-0">
+              <button type="submit" className="btn w-full" disabled={loading || testing}>
                 {loading ? <i className="fa-solid fa-spinner fa-spin w-5 h-5"></i> : (
-                  <>Install <i className="fa-solid fa-arrow-right w-4 h-4 ml-1"></i></>
+                  <>Kurulumu Tamamla <i className="fa-solid fa-arrow-right w-4 h-4 ml-1"></i></>
                 )}
               </button>
             </div>

@@ -53,9 +53,9 @@ const AnnouncementView = () => {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'high': return 'text-red-400 bg-red-500/10 border-red-500/25';
-      case 'medium': return 'text-amber-400 bg-amber-500/10 border-amber-500/25';
-      default: return 'text-blue-400 bg-blue-500/10 border-blue-500/25';
+      case 'high': return 'var(--error)';
+      case 'medium': return 'var(--warning)';
+      default: return 'var(--info)';
     }
   };
 
@@ -78,8 +78,8 @@ const AnnouncementView = () => {
   if (error || !announcement) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <i className="fa-solid fa-circle-exclamation w-16 h-16 text-red-400 opacity-50 flex items-center justify-center"></i>
-        <p className="text-slate-400 text-lg">{error || 'Duyuru bulunamadı.'}</p>
+        <i className="fa-solid fa-circle-exclamation" style={{ fontSize: '2.5rem', color: 'var(--error)', opacity: 0.5 }}></i>
+        <p className="text-muted text-lg">{error || 'Duyuru bulunamadı.'}</p>
         <button onClick={() => navigate('/dashboard/announcements')} className="ev-btn ev-btn-secondary">
           <i className="fa-solid fa-arrow-left"></i> Geri Dön
         </button>
@@ -118,16 +118,16 @@ const AnnouncementView = () => {
       {/* Content Card */}
       <div className="premium-card p-0 overflow-hidden">
         {/* Title Area */}
-        <div className="p-8 border-b border-slate-800/50 bg-gradient-to-br from-slate-900 to-slate-950">
+        <div className="p-8" style={{ borderBottom: '1px solid var(--border-color)', background: 'var(--bg-hover)' }}>
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div className="ev-icon ev-icon-purple ev-icon-lg">
               <i className="fa-solid fa-bullhorn"></i>
             </div>
-            <span className={`text-xs uppercase font-bold px-3 py-1.5 rounded-full border ${getPriorityColor(announcement.priority)}`}>
+            <span className="badge" style={{ '--badge-color': getPriorityColor(announcement.priority) }}>
               {getPriorityLabel(announcement.priority)}
             </span>
             {announcement.is_published === 0 && (
-              <span className="text-xs uppercase font-bold px-3 py-1.5 rounded-full border text-slate-400 bg-slate-800 border-slate-700">
+              <span className="badge" style={{ '--badge-color': 'var(--text-subtle)' }}>
                 Taslak
               </span>
             )}
@@ -135,53 +135,53 @@ const AnnouncementView = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-gradient leading-tight mb-5">
             {announcement.title}
           </h1>
-          <div className="flex flex-wrap items-center gap-6 text-sm text-slate-400">
+          <div className="flex flex-wrap items-center gap-6 text-sm text-muted">
             <span className="flex items-center gap-2">
-              <i className="fa-solid fa-user w-4 h-4 text-slate-500"></i>
+              <i className="fa-solid fa-user text-subtle"></i>
               {announcement.created_by_name || announcement.created_by_username}
             </span>
             <span className="flex items-center gap-2">
-              <i className="fa-solid fa-calendar w-4 h-4 text-slate-500"></i>
+              <i className="fa-solid fa-calendar text-subtle"></i>
               {new Date(announcement.created_at).toLocaleDateString('tr-TR', {
                 day: 'numeric', month: 'long', year: 'numeric',
                 hour: '2-digit', minute: '2-digit'
               })}
             </span>
             <span className="flex items-center gap-2">
-              <i className="fa-solid fa-eye w-4 h-4 text-slate-500"></i>
+              <i className="fa-solid fa-eye text-subtle"></i>
               {announcement.view_count || 0} görüntülenme
             </span>
           </div>
         </div>
 
         {/* Short Description */}
-        <div className="px-8 py-6 border-b border-slate-800/50 bg-slate-900/50">
-          <p className="text-lg text-slate-300 leading-relaxed italic">
+        <div className="px-8 py-6" style={{ borderBottom: '1px solid var(--border-color)', background: 'var(--bg-hover)' }}>
+          <p className="text-lg leading-relaxed" style={{ fontStyle: 'italic', color: 'var(--text-main)', opacity: 0.85 }}>
             {announcement.short_description}
           </p>
         </div>
 
         {/* Full Content */}
-        <div className="p-8 bg-slate-900/20">
+        <div className="p-8">
           {announcement.content ? (
             <>
               <div
-                className="prose prose-invert prose-blue max-w-none text-slate-200 leading-relaxed text-base"
+                className="prose max-w-none leading-relaxed text-base"
                 dangerouslySetInnerHTML={{ __html: announcement.content }}
               />
               <style dangerouslySetInnerHTML={{__html: `
-                .prose h1, .prose h2, .prose h3 { color: white; margin-top: 1.5em; }
-                .prose p { color: rgb(203 213 225); line-height: 1.8; margin-bottom: 1em; }
-                .prose li { color: rgb(203 213 225); }
-                .prose strong { color: white; }
-                .prose a { color: rgb(96 165 250); }
-                .prose blockquote { border-left-color: rgb(96 165 250); color: rgb(148 163 184); }
-                .prose code { background: rgba(255,255,255,0.08); color: rgb(196 228 255); padding: 0.15em 0.35em; border-radius: 4px; }
-                .prose pre { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); }
+                .prose h1, .prose h2, .prose h3 { color: var(--text-main); margin-top: 1.5em; }
+                .prose p { color: var(--text-main); line-height: 1.8; margin-bottom: 1em; }
+                .prose li { color: var(--text-main); }
+                .prose strong { color: var(--text-main); }
+                .prose a { color: var(--primary); }
+                .prose blockquote { border-left-color: var(--primary); color: var(--text-muted); }
+                .prose code { background: var(--bg-hover); color: var(--primary); padding: 0.15em 0.35em; border-radius: 4px; font-family: var(--font-mono); }
+                .prose pre { background: var(--bg-hover); border: 1px solid var(--border-color); }
               `}} />
             </>
           ) : (
-            <p className="text-slate-500 italic text-center py-8">Bu duyuru için ek içerik bulunmuyor.</p>
+            <p className="text-subtle text-center py-8" style={{ fontStyle: 'italic' }}>Bu duyuru için ek içerik bulunmuyor.</p>
           )}
         </div>
       </div>

@@ -1,27 +1,23 @@
 <?php
-
 require_once __DIR__ . '/../Core/Database.php';
 
 try {
     $pdo = Database::getConnection();
-    
-    // Create calendar_events table
+
     $pdo->exec("
-        CREATE TABLE IF NOT EXISTS calendar_events (
+        CREATE TABLE IF NOT EXISTS ticket_comments (
             id INT AUTO_INCREMENT PRIMARY KEY,
+            ticket_id INT NOT NULL,
             user_id INT NOT NULL,
-            event_date DATE NOT NULL,
-            event_time TIME NULL,
-            title VARCHAR(255) NOT NULL,
-            color VARCHAR(20) DEFAULT '#3b82f6',
-            is_done TINYINT(1) NOT NULL DEFAULT 0,
+            type ENUM('comment','completion','reassignment') NOT NULL DEFAULT 'comment',
+            comment TEXT NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            INDEX idx_user_date (user_id, event_date)
+            INDEX idx_ticket (ticket_id, created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
-
-    echo "Calendar events migration successful!\n";
+    echo "Table 'ticket_comments' ready.\n";
 } catch (Exception $e) {
     echo "Error: " . $e->getMessage() . "\n";
 }

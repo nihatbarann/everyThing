@@ -10,10 +10,12 @@ try {
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
             title VARCHAR(255) NOT NULL,
+            category VARCHAR(50) NULL,
             url TEXT NOT NULL,
             username VARCHAR(255),
             password VARCHAR(255),
             notes TEXT,
+            is_favorite TINYINT(1) NOT NULL DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

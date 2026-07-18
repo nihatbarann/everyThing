@@ -45,9 +45,23 @@ class InstallController {
         // Read JSON body
         $data = json_decode(file_get_contents('php://input'), true);
 
-        if (!$data || !isset($data['db_host'], $data['db_port'], $data['db_name'], $data['db_user'], $data['db_password'])) {
+        if (!$data || !isset($data['db_host'], $data['db_port'], $data['db_name'], $data['db_user'], $data['db_password'], $data['admin_username'], $data['admin_password'])) {
             http_response_code(400);
-            echo json_encode(['error' => 'Missing database credentials']);
+            echo json_encode(['error' => 'Missing required fields']);
+            return;
+        }
+
+        $adminUsername = trim($data['admin_username']);
+        $adminPassword = (string) $data['admin_password'];
+
+        if (strlen($adminUsername) < 3) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Yönetici kullanıcı adı en az 3 karakter olmalıdır']);
+            return;
+        }
+        if (strlen($adminPassword) < 6) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Yönetici şifresi en az 6 karakter olmalıdır']);
             return;
         }
 
@@ -65,8 +79,8 @@ class InstallController {
             // Create Tables (users, roles, menus, role_menu)
             $this->runMigrations($pdo);
 
-            // Create Default Admin User
-            $this->createDefaultAdmin($pdo);
+            // Create the admin account the installer chose — no shared default credentials
+            $this->createAdminUser($pdo, $adminUsername, $adminPassword);
 
             // Save Config File
             $this->saveConfig($data);
@@ -127,10 +141,10 @@ class InstallController {
         // Insert default menus if empty
         $stmt = $pdo->query("SELECT COUNT(*) FROM menus");
         if($stmt->fetchColumn() == 0) {
-            $pdo->exec("INSERT INTO menus (name, path, icon) VALUES 
+            $pdo->exec("INSERT INTO menus (name, path, icon) VALUES
                 ('Dashboard', '/dashboard', 'home'),
-                ('Users', '/users', 'users'),
-                ('Settings', '/settings', 'settings')
+                ('Users', '/dashboard/users', 'users'),
+                ('Settings', '/dashboard/settings', 'settings')
             ");
             
             // Give Admin access to all menus by default
@@ -138,18 +152,19 @@ class InstallController {
         }
     }
 
-    private function createDefaultAdmin(PDO $pdo) {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = 'everything'");
-        $stmt->execute();
-        $passwordHash = password_hash('admin', PASSWORD_BCRYPT);
-        
+    private function createAdminUser(PDO $pdo, $username, $password) {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
+        $stmt->execute([$username]);
+        $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+
         if ($stmt->fetchColumn() == 0) {
-            $stmt = $pdo->prepare("INSERT INTO users (role_id, username, password) VALUES (1, 'everything', ?)");
-            $stmt->execute([$passwordHash]);
+            $stmt = $pdo->prepare("INSERT INTO users (role_id, username, password) VALUES (1, ?, ?)");
+            $stmt->execute([$username, $passwordHash]);
         } else {
-            // Update password to ensure it is 'admin' for previously failed setups
-            $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE username = 'everything'");
-            $stmt->execute([$passwordHash]);
+            // A retried/failed setup left this username behind — reset its password
+            // to what was just submitted rather than leaving a stale credential.
+            $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE username = ?");
+            $stmt->execute([$passwordHash, $username]);
         }
     }
 

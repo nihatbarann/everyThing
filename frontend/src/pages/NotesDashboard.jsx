@@ -46,9 +46,11 @@ const NotesDashboard = () => {
             <p className="text-muted">Kişisel notlarınızı buradan yönetebilirsiniz.</p>
           </div>
         </div>
-        <div onClick={handleCreateNote} className="ev-btn ev-btn-primary" style={{ cursor: 'pointer' }}>
-          <i className="fa-solid fa-plus"></i>
-          <span>Yeni Not Oluştur</span>
+        <div className="flex items-center gap-3">
+          <div onClick={handleCreateNote} className="ev-btn ev-btn-primary" style={{ cursor: 'pointer' }}>
+            <i className="fa-solid fa-note-sticky"></i>
+            <span>Yeni Not</span>
+          </div>
         </div>
       </header>
 
@@ -76,7 +78,10 @@ const NotesDashboard = () => {
               className="premium-card cursor-pointer hover:border-primary/50 hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)] transition-all group flex flex-col h-40"
             >
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-lg truncate pr-4 text-[var(--text-main)]" title={note.title}>{note.title}</h3>
+                <h3 className="font-bold text-lg truncate pr-4 text-[var(--text-main)] flex items-center gap-2" title={note.title}>
+                  <i className={`fa-solid ${note.type === 'diagram' ? 'fa-diagram-project' : 'fa-note-sticky'} text-primary text-sm shrink-0`}></i>
+                  <span className="truncate">{note.title}</span>
+                </h3>
                 <div 
                   onClick={(e) => handleDelete(e, note.id)}
                   className="ev-icon ev-icon-sm ev-icon-action ev-hover-error ev-show-on-hover"

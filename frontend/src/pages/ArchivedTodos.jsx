@@ -115,15 +115,15 @@ const ArchivedTodos = () => {
             </div>
           ) : (
             <div className="grid-container grid-cols-3">
-              {todos.filter(t => 
-                t.description.toLowerCase().includes(searchQuery.toLowerCase())
+              {todos.filter(t =>
+                ((t.title || '') + ' ' + (t.description || '')).toLowerCase().includes(searchQuery.toLowerCase())
               ).map(task => {
                 const getPriorityInfo = (p) => {
                   switch(p) {
-                    case 'high': return { label: 'Yüksek', class: 'bg-error/20 text-error border-error/30' };
-                    case 'medium': return { label: 'Orta', class: 'bg-warning/20 text-warning border-warning/30' };
-                    case 'low': return { label: 'Düşük', class: 'bg-primary/20 text-primary border-primary/30' };
-                    default: return { label: 'Orta', class: 'bg-warning/20 text-warning border-warning/30' };
+                    case 'high': return { label: 'Yüksek', color: 'var(--error)' };
+                    case 'medium': return { label: 'Orta', color: 'var(--warning)' };
+                    case 'low': return { label: 'Düşük', color: 'var(--primary)' };
+                    default: return { label: 'Orta', color: 'var(--warning)' };
                   }
                 };
                 const priority = getPriorityInfo(task.priority);
@@ -131,9 +131,17 @@ const ArchivedTodos = () => {
                 return (
                   <div key={task.id} className="um-kanban-card card-todo group relative overflow-hidden opacity-90 hover:opacity-100 transition-opacity flex flex-col gap-2">
                     <div className="flex-1">
-                      <p className="text-xs text-[var(--text-main)] leading-relaxed whitespace-pre-wrap line-clamp-4">
-                        {task.description}
-                      </p>
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h4 className="text-sm font-bold text-[var(--text-main)] leading-snug">{task.title || 'İsimsiz Görev'}</h4>
+                        <span className="priority-badge" style={{ '--badge-color': priority.color }}>
+                          {priority.label}
+                        </span>
+                      </div>
+                      {!!task.description && (
+                        <p className="text-xs text-muted leading-relaxed whitespace-pre-wrap line-clamp-4">
+                          {task.description}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between mt-1 pt-2 border-t border-[var(--glass-border)]">

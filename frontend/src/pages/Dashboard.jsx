@@ -7,7 +7,10 @@ import 'react-calendar/dist/Calendar.css';
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
-  
+  const [certificates, setCertificates] = useState([]);
+  const [monitors, setMonitors] = useState([]);
+  const [systemLoaded, setSystemLoaded] = useState(false);
+
   // Calendar states
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState([]);
@@ -26,7 +29,23 @@ const Dashboard = () => {
     }
     fetchLatestAnnouncements();
     fetchEvents(new Date());
+    fetchSystemStatus();
   }, []);
+
+  const fetchSystemStatus = async () => {
+    const headers = { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } };
+    try {
+      const [certRes, monRes] = await Promise.all([
+        axios.get('/api/certificates', headers).catch(() => ({ data: { certificates: [] } })),
+        axios.get('/api/monitors', headers).catch(() => ({ data: { monitors: [] } })),
+      ]);
+      setCertificates(certRes.data.certificates || []);
+      setMonitors(monRes.data.monitors || []);
+    } catch (err) {
+    } finally {
+      setSystemLoaded(true);
+    }
+  };
 
   const fetchEvents = async (date) => {
     try {
@@ -199,6 +218,46 @@ const Dashboard = () => {
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </div>
       </header>
+
+      {/* System Status Strip — certificate/domain expiry + device monitoring */}
+      {systemLoaded && (certificates.length > 0 || monitors.length > 0) && (() => {
+        const expiringCerts = certificates
+          .filter(c => c.days_left <= c.reminder_days)
+          .sort((a, b) => a.days_left - b.days_left)
+          .slice(0, 3);
+        const downMonitors = monitors.filter(m => m.last_status === 'down');
+        const allClear = expiringCerts.length === 0 && downMonitors.length === 0;
+
+        if (allClear) {
+          return (
+            <div className="premium-card animate-in" style={{ padding: '0.9rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="ev-icon ev-icon-sm ev-icon-success"><i className="fa-solid fa-check"></i></div>
+              <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Sistem durumu iyi — süresi yaklaşan kayıt veya erişilemeyen cihaz yok.</span>
+            </div>
+          );
+        }
+
+        return (
+          <div className="flex flex-col gap-2 animate-in" style={{ display: 'flex', flexWrap: 'wrap', flexDirection: 'row', gap: '0.75rem' }}>
+            {downMonitors.length > 0 && (
+              <Link to="/dashboard/monitors" className="premium-card" style={{ padding: '0.9rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 260px', textDecoration: 'none' }}>
+                <div className="ev-icon ev-icon-sm ev-icon-error"><i className="fa-solid fa-tower-broadcast"></i></div>
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)' }}>{downMonitors.length} cihaz erişilemiyor</span>
+                <i className="fa-solid fa-arrow-right" style={{ marginLeft: 'auto', color: 'var(--text-subtle)', fontSize: '0.75rem' }}></i>
+              </Link>
+            )}
+            {expiringCerts.map(c => (
+              <Link key={c.id} to="/dashboard/certificates" className="premium-card" style={{ padding: '0.9rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 260px', textDecoration: 'none' }}>
+                <div className={`ev-icon ev-icon-sm ${c.days_left <= 7 ? 'ev-icon-error' : 'ev-icon-warning'}`}><i className="fa-solid fa-certificate"></i></div>
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {c.title} — {c.days_left < 0 ? 'süresi doldu' : `${c.days_left} gün kaldı`}
+                </span>
+                <i className="fa-solid fa-arrow-right" style={{ marginLeft: 'auto', color: 'var(--text-subtle)', fontSize: '0.75rem', flexShrink: 0 }}></i>
+              </Link>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Dashboard Content - 50/50 Split Grid */}
       <div className="dashboard-split">

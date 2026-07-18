@@ -23,9 +23,9 @@ class NoteController {
         try {
             $pdo = Database::getConnection();
             $stmt = $pdo->prepare(
-                "SELECT id, title, created_at, updated_at 
-                 FROM notes 
-                 WHERE user_id = ? 
+                "SELECT id, title, type, created_at, updated_at
+                 FROM notes
+                 WHERE user_id = ?
                  ORDER BY updated_at DESC"
             );
             $stmt->execute([$user['user_id']]);
@@ -74,6 +74,7 @@ class NoteController {
         
         $title = trim($data['title'] ?? 'Yeni Not');
         $content = $data['content'] ?? '';
+        $type = in_array($data['type'] ?? 'text', ['text', 'diagram'], true) ? $data['type'] : 'text';
 
         if (empty($title)) {
             $title = 'İsimsiz Not';
@@ -81,8 +82,8 @@ class NoteController {
 
         try {
             $pdo = Database::getConnection();
-            $stmt = $pdo->prepare("INSERT INTO notes (user_id, title, content) VALUES (?, ?, ?)");
-            $stmt->execute([$user['user_id'], $title, $content]);
+            $stmt = $pdo->prepare("INSERT INTO notes (user_id, title, type, content) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$user['user_id'], $title, $type, $content]);
             
             $newId = $pdo->lastInsertId();
             ActivityLogController::log($user['user_id'], $user['username'], 'note.create', "Created note \"{$title}\"", 'note', $newId);

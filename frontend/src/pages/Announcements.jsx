@@ -97,7 +97,7 @@ const Announcements = () => {
 
       <div className="flex flex-col gap-4">
         {announcements.length === 0 ? (
-          <div className="premium-card p-12 text-center text-slate-400 flex flex-col items-center">
+          <div className="premium-card p-12 text-center text-muted flex flex-col items-center">
             <i className="fa-solid fa-bullhorn w-16 h-16 mb-4 opacity-20"></i>
             <h3 className="text-xl font-medium mb-2">Henüz Duyuru Yok</h3>
             <p className="max-w-md">Sistemde kayıtlı herhangi bir duyuru bulunmuyor.</p>

@@ -1,18 +1,13 @@
 <?php
 
+require_once __DIR__ . '/Secret.php';
+
 class AuthMiddleware {
     private $secretKey;
 
     public function __construct() {
-        // JWT secret MUST be set via environment variable in production.
-        // Set JWT_SECRET in Apache's SetEnv or system environment.
-        $secret = getenv('JWT_SECRET');
-        if (!$secret || strlen($secret) < 32) {
-            // In development, use a long default — but log a warning.
-            $secret = 'EveryThing_Dev_Secret_Change_This_In_Production_Please_Min32';
-            // Do NOT expose this in production; set JWT_SECRET env var instead.
-        }
-        $this->secretKey = $secret;
+        // Prefer JWT_SECRET env var in production; see Secret::jwt() for fallback behavior.
+        $this->secretKey = Secret::jwt();
     }
 
     /**
